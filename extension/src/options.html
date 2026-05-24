@@ -3,18 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LinkGenie Options</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <title>LinkGenie Settings</title>
   <style>
     :root {
-      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-      --card-bg: rgba(30, 41, 59, 0.7);
-      --border-color: rgba(255, 255, 255, 0.08);
-      --primary-color: #6366f1;
-      --primary-hover: #4f46e5;
-      --text-color: #f1f5f9;
-      --text-muted: #94a3b8;
-      --success-color: #10b981;
+      --bg-gradient: radial-gradient(circle at top, #2c2c2e 0%, #1c1c1e 70%, #0c0c0d 100%);
+      --bg-color: #1c1c1e;
+      --panel-bg: rgba(44, 44, 46, 0.45);
+      --border-color: rgba(255, 255, 255, 0.06);
+      --accent-color: #0a84ff; /* Apple System Blue */
+      --accent-hover: #0071e3;
+      --text-primary: #ffffff;
+      --text-secondary: #aeaea2;
+      --text-muted: #8e8e93;
+      --input-bg: rgba(255, 255, 255, 0.04);
+      --input-border: rgba(255, 255, 255, 0.08);
+      --success-green: #30d158; /* Apple System Green */
     }
 
     * {
@@ -24,168 +27,264 @@
     }
 
     body {
-      font-family: 'Outfit', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
       background: var(--bg-gradient);
-      color: var(--text-color);
+      background-color: var(--bg-color);
+      color: var(--text-primary);
       width: 420px;
       margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+      padding: 20px;
       overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
-    .container {
-      padding: 24px;
-      width: 100%;
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
     }
 
-    h1 {
-      font-size: 22px;
+    .logo-container {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #0a84ff 0%, #5e5ce6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 10px rgba(10, 132, 255, 0.25);
+    }
+
+    .title-area h1 {
+      font-size: 17px;
       font-weight: 600;
-      margin-bottom: 6px;
-      background: linear-gradient(to right, #818cf8, #c084fc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.2px;
+      line-height: 1.2;
     }
 
-    .subtitle {
+    .title-area p {
+      font-size: 11px;
       color: var(--text-muted);
-      font-size: 13px;
-      margin-bottom: 20px;
     }
 
-    .form-group {
-      margin-bottom: 20px;
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      margin-left: 4px;
+    }
+
+    .settings-group {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 4px 14px;
+      margin-bottom: 18px;
+    }
+
+    .row {
+      display: flex;
+      flex-direction: column;
+      padding: 12px 0;
+    }
+
+    .row:not(:last-child) {
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .row-label-group {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
     }
 
     label {
-      display: block;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 500;
-      margin-bottom: 8px;
-      color: var(--text-color);
+      color: var(--text-primary);
+    }
+
+    .row-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.3;
+    }
+
+    .optional-tag {
+      font-size: 10px;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.06);
+      padding: 1px 5px;
+      border-radius: 3px;
     }
 
     input[type="text"], input[type="password"], select, textarea {
       width: 100%;
-      padding: 12px;
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      color: var(--text-color);
+      padding: 8px 10px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      color: var(--text-primary);
       font-family: inherit;
-      font-size: 14px;
-      transition: all 0.3s ease;
+      font-size: 12.5px;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
     input[type="text"]:focus, input[type="password"]:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.25);
+    }
+
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath fill='%238e8e93' d='M0 2l4 4 4-4z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
     }
 
     select option {
-      background: #0f172a;
-      color: var(--text-color);
+      background: #2c2c2e;
+      color: var(--text-primary);
     }
 
     textarea {
       resize: vertical;
-      min-height: 100px;
+      min-height: 80px;
+      line-height: 1.4;
     }
 
-    .help-text {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 4px;
+    .action-area {
+      margin-top: 22px;
     }
 
     .btn {
-      display: inline-block;
       width: 100%;
-      padding: 12px;
-      background: var(--primary-color);
-      color: #fff;
+      padding: 10px;
+      background-color: var(--accent-color);
       border: none;
       border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
       cursor: pointer;
-      transition: background-color 0.2s ease;
+      transition: background-color 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
     }
 
     .btn:hover {
-      background: var(--primary-hover);
+      background-color: var(--accent-hover);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+      opacity: 0.9;
     }
 
     .status {
-      margin-top: 16px;
-      font-size: 14px;
+      margin-top: 12px;
+      font-size: 12px;
       text-align: center;
-      padding: 10px;
+      padding: 8px;
       border-radius: 6px;
       display: none;
     }
 
     .status.success {
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      color: #34d399;
+      background: rgba(48, 209, 88, 0.12);
+      border: 1px solid rgba(48, 209, 88, 0.25);
+      color: var(--success-green);
       display: block;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .footer {
-      margin-top: 24px;
+      margin-top: 22px;
       text-align: center;
-      font-size: 12px;
+      font-size: 10.5px;
       color: var(--text-muted);
       border-top: 1px solid var(--border-color);
-      padding-top: 16px;
+      padding-top: 12px;
+      line-height: 1.4;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>LinkGenie</h1>
-    <div class="subtitle">Configuration settings for your LinkedIn AI helper.</div>
+  <div class="header">
+    <div class="logo-container">🧞‍♂️</div>
+    <div class="title-area">
+      <h1>LinkGenie</h1>
+      <p>Extension Settings</p>
+    </div>
+  </div>
 
-
-
-    <div class="form-group">
-      <label for="provider">LLM Provider</label>
+  <div class="section-label">API Configuration</div>
+  <div class="settings-group">
+    <div class="row">
+      <div class="row-label-group">
+        <label for="provider">LLM Provider</label>
+      </div>
       <select id="provider">
         <option value="gemini">Google Gemini</option>
         <option value="openai">OpenAI</option>
         <option value="anthropic">Anthropic Claude</option>
       </select>
-      <div class="help-text">Select your preferred AI generation provider.</div>
+      <div class="row-desc">Select your preferred AI generation provider.</div>
     </div>
 
-    <div class="form-group">
-      <label for="apiKey">API Key</label>
+    <div class="row">
+      <div class="row-label-group">
+        <label for="apiKey">API Key</label>
+      </div>
       <input type="password" id="apiKey" placeholder="Enter your provider API Key">
-      <div class="help-text">Your API key is stored securely in your browser and is never shared publicly.</div>
+      <div class="row-desc">Stored securely in your local browser storage.</div>
     </div>
 
-    <div class="form-group">
-      <label for="model">Model Name (Optional Override)</label>
+    <div class="row">
+      <div class="row-label-group">
+        <label for="model">Model Name</label>
+        <span class="optional-tag">Optional</span>
+      </div>
       <input type="text" id="model" placeholder="e.g. gemini-1.5-flash">
-      <div class="help-text">Leave blank to use the backend default for the selected provider.</div>
+      <div class="row-desc">Override the default LLM model name.</div>
     </div>
+  </div>
 
-    <div class="form-group">
-      <label for="persona">My Persona / Context (Optional)</label>
-      <textarea id="persona" placeholder="e.g. A staff software engineer specializing in web performance, React, and browser extensions. Tone: constructive and technical."></textarea>
-      <div class="help-text">Explain your background, role, or preferred response style. The AI will weave this into draft replies.</div>
+  <div class="section-label">Personalization</div>
+  <div class="settings-group">
+    <div class="row">
+      <div class="row-label-group">
+        <label for="persona">My Persona / Context</label>
+        <span class="optional-tag">Optional</span>
+      </div>
+      <textarea id="persona" placeholder="e.g. A staff software engineer specializing in web performance. Tone: constructive and technical."></textarea>
+      <div class="row-desc">Explain your background, role, or preferred response style.</div>
     </div>
+  </div>
 
+  <div class="action-area">
     <button id="saveBtn" class="btn">Save Configuration</button>
-
     <div id="status" class="status">Settings saved!</div>
+  </div>
 
-    <div class="footer">
-      This extension is 100% serverless and communicates directly with your chosen AI provider.
-    </div>
+  <div class="footer">
+    LinkGenie is 100% serverless and communicates directly with your chosen AI provider.
   </div>
 
   <script src="../dist/options.js"></script>
