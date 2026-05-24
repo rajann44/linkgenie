@@ -90,22 +90,33 @@ function isInsideCommentSection(el: HTMLElement, stopAt?: HTMLElement): boolean 
  * Traverses up from a comment composer to find the parent post text content.
  */
 function extractPostText(editor: HTMLElement): string {
-  // 1. Find the parent post card
+  // 1. Find the parent post card, bypassing nested comment items
   let current: HTMLElement | null = editor;
   let postCardElement: HTMLElement | null = null;
   while (current) {
     const role = current.getAttribute('role') || '';
     const compKey = current.getAttribute('componentkey') || '';
-    if (
-      current.tagName === 'ARTICLE' ||
-      current.hasAttribute('data-urn') ||
-      role === 'listitem' ||
-      compKey.includes('FeedType_MAIN_FEED') ||
-      current.classList.contains('feed-shared-update-v2') ||
-      current.classList.contains('occludable-update')
-    ) {
-      postCardElement = current;
-      break;
+    
+    // Check if the current element belongs to a comment item so we keep climbing
+    const isComment = current.classList.contains('comments-comment-item') ||
+                      current.classList.contains('comment-item') ||
+                      current.closest('.comments-comment-item') ||
+                      current.closest('.comment-item') ||
+                      (current.getAttribute('data-id') || '').startsWith('comment-');
+
+    if (!isComment) {
+      if (
+        current.tagName === 'ARTICLE' ||
+        current.hasAttribute('data-urn') ||
+        role === 'listitem' ||
+        compKey.includes('FeedType_MAIN_FEED') ||
+        current.classList.contains('feed-shared-update-v2') ||
+        current.classList.contains('occludable-update') ||
+        current.classList.contains('feed-shared-update')
+      ) {
+        postCardElement = current;
+        break;
+      }
     }
     current = current.parentElement;
   }
@@ -149,9 +160,34 @@ function extractPostText(editor: HTMLElement): string {
     }
   }
 
-  // Now, collect all text segments from p and span elements inside the post card
-  // excluding commentsContainer, headerContainer, and other noise
-  const paragraphs = postCardElement.querySelectorAll('p, span, [class*="commentary"]');
+  // 2. Try to query known selectors FIRST (explicitly checking .expandable-text-box)
+  const knownSelectors = [
+    '.expandable-text-box',
+    '.feed-shared-inline-show-more-text',
+    'p[componentkey*="feed-commentary"]',
+    '[class*="commentary"]'
+  ];
+
+  for (const selector of knownSelectors) {
+    const el = postCardElement.querySelector(selector) as HTMLElement;
+    if (el) {
+      // Make sure it's not inside comments or header
+      const insideComments = commentsContainer && commentsContainer.contains(el);
+      const insideHeader = headerContainer && headerContainer.contains(el);
+      if (!insideComments && !insideHeader) {
+        let text = (el.textContent || '').trim();
+        text = text.replace(/\bsee\s+more\b/gi, '').trim();
+        if (text.length > 15) {
+          console.log(`AI Reply Extension: Found post text via primary selector "${selector}":`, text);
+          return text;
+        }
+      }
+    }
+  }
+
+  // 3. Fallback to class-agnostic scanner if known selectors fail
+  console.log('AI Reply Extension: Primary selectors failed. Falling back to class-agnostic scanner...');
+  const paragraphs = postCardElement.querySelectorAll('p, span');
   const validSegments: string[] = [];
 
   paragraphs.forEach((p) => {
