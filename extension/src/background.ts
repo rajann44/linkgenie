@@ -96,7 +96,7 @@ Draft a reply to this post following your system instructions.`;
         let reply = '';
 
         if (provider === 'gemini') {
-          const modelName = model || 'gemini-1.5-flash';
+          const modelName = model || 'gemini-2.5-flash';
           // Use standard Google Generative Language API
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
           
