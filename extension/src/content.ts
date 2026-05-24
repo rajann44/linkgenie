@@ -1059,8 +1059,15 @@ function triggerGeneration() {
       }
 
       if (response && response.success) {
-        draftTextarea.value = response.reply;
-        insertBtn.disabled = false;
+        if (response.reply === 'POST_TEXT_NOT_FOUND') {
+          draftTextarea.value = '';
+          errorContainer.textContent = 'LinkGenie could not detect a clear post body from this card to generate a reply.';
+          errorContainer.classList.add('active');
+          insertBtn.disabled = true;
+        } else {
+          draftTextarea.value = response.reply;
+          insertBtn.disabled = false;
+        }
       } else {
         const errorMsg = response?.error || 'Unknown error occurred while generating reply.';
         errorContainer.textContent = `Error: ${errorMsg}`;

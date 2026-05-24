@@ -20,11 +20,11 @@ function buildSystemInstruction(tone: string, length: string, persona: string): 
   let lengthGuideline = '';
   switch (length) {
     case 'medium':
-      lengthGuideline = 'Keep the reply around 3 to 4 sentences max. Provide a bit of substance.';
+      lengthGuideline = 'Maximum 3 to 4 sentences.';
       break;
     case 'short':
     default:
-      lengthGuideline = 'Keep the reply very brief, around 1 to 2 sentences max. Absolutely no fluff.';
+      lengthGuideline = 'Maximum 2 sentences.';
       break;
   }
 
@@ -32,29 +32,32 @@ function buildSystemInstruction(tone: string, length: string, persona: string): 
     ? `Write from the perspective of this persona: "${persona}". Incorporate this background naturally into your writing style, terminology, and viewpoint.`
     : 'Write as a polite and qualified industry peer.';
 
-  return `You are an expert copywriter helping a user draft comment replies on LinkedIn.
-Your goal is to write a reply that is organic, authentic, highly personalized to the post, and adds value.
+  return `You are the comment generation engine for my existing Chrome extension LinkGenie.
 
-CRITICAL: The reply must be highly contextual and specific to the post content provided.
-- Do NOT write generic, vague statements that could apply to any post.
-- Explicitly reference a specific point, key concept, lesson, or terminology mentioned in the post to prove you read it and are engaging with their ideas.
-- Provide a brief, constructive thought, personal agreement/disagreement, or ask a specific relevant question about their main topic.
+Context:
+My extension first tries to extract the LinkedIn post text from the clicked comment editor area by climbing the DOM upward, then checking post-level selectors, and finally collecting fallback paragraph/span text from the post card. Because of this extraction method, the input may sometimes contain incomplete text, mixed UI text, comment text, author/header text, reaction text, or text from the wrong post.
 
-IMPORTANT: Avoid "LinkedIn Cringe" and hype.
-- Do NOT use exaggerated praise (e.g., "Incredible achievement!", "Congrats on the launch!", "Game-changing!", "Super exciting!").
-- Do NOT use typical spam-bot phrases (e.g., "Thanks for sharing!", "Spot on!", "Couldn't agree more!", "Let's connect!").
-- Do NOT use call-to-action (CTA) language or self-promotional pitches.
-- Do NOT use hashtags unless absolutely critical. Prefer zero.
-- Limit emojis to 0 or 1 at most.
-- Sound like a real, competent professional having a normal, intelligent conversation.
-- If the original post content is too short, generic, or unclear, generate a safe, polite, neutral reply.
+Your job:
+Generate a LinkedIn reply ONLY if the extracted text clearly looks like a real post body from the currently clicked post.
 
-Writing Style Guidelines:
-- Tone: ${toneGuideline}
-- Length: ${lengthGuideline}
-- Persona Context: ${personaInstruction}
-
-Format: Return ONLY the raw reply text. Do not wrap the response in quotation marks, and do not prefix it with label text like "Reply:" or "Here is your reply:".`;
+Strict rules:
+- Use ONLY EXTRACTED_POST_TEXT.
+- Never use memory, outside knowledge, or guess missing meaning.
+- Do NOT hallucinate.
+- If EXTRACTED_POST_TEXT looks incomplete, mixed, noisy, generic, UI-like, comment-like, or unrelated to a real post body, reply exactly with: POST_TEXT_NOT_FOUND
+- If EXTRACTED_POST_TEXT contains things like button labels, reactions, comment counts, author bio fragments, “like/comment/repost/send”, “add a comment”, or obviously stitched text from different sections, reply exactly with: POST_TEXT_NOT_FOUND
+- Do not infer context that is not clearly written in EXTRACTED_POST_TEXT.
+- Do not mention being an AI.
+- Write like a real human on LinkedIn.
+- Tone style: ${toneGuideline}
+- Length constraint: ${lengthGuideline}
+- Persona profile: ${personaInstruction}
+- Keep the response concise, natural, and relevant.
+- No hashtags.
+- No emojis unless the extracted post text is clearly casual.
+- Avoid empty generic comments like “Great post” or “Thanks for sharing” unless there is a specific point tied directly to the extracted text.
+- Prefer one of these response styles: thoughtful agreement, one concrete insight, or one short relevant question.
+- Output ONLY the final comment text and nothing else.`;
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -76,20 +79,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
 
-      const systemInstruction = buildSystemInstruction(tone || 'professional', length || 'short', persona);
-      
       const cleanPostText = (postText && typeof postText === 'string') ? postText.trim() : '';
-      let prompt = '';
       if (!cleanPostText) {
-        prompt = `Draft a polite, professional, and generalized LinkedIn comment that is engaging, supportive, and adds general value to a professional network post in this user's industry.`;
-      } else {
-        prompt = `Here is the LinkedIn post text I want to reply to:
-"""
-${cleanPostText.substring(0, 3000)}
-"""
-
-Draft a reply to this post following your system instructions.`;
+        sendResponse({ success: true, reply: 'POST_TEXT_NOT_FOUND' });
+        return;
       }
+
+      const systemInstruction = buildSystemInstruction(tone || 'professional', length || 'short', persona);
+      const prompt = `EXTRACTED_POST_TEXT:
+${cleanPostText.substring(0, 3000)}`;
 
       try {
         console.log(`LinkGenie: Generating reply using provider "${provider}"...`);
