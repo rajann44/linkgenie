@@ -1,0 +1,14 @@
+{
+  "name": "linkgenie-extension",
+  "version": "1.0.0",
+  "description": "Chrome extension frontend for AI LinkedIn replies.",
+  "scripts": {
+    "build": "node build.js",
+    "watch": "node build.js --watch"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "esbuild": "^0.20.1",
+    "typescript": "^5.3.3"
+  }
+}

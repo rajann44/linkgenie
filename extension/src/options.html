@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkGenie Options</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --primary-color: #6366f1;
+      --primary-hover: #4f46e5;
+      --text-color: #f1f5f9;
+      --text-muted: #94a3b8;
+      --success-color: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      background: linear-gradient(to right, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text-color);
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 12px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-color);
+      font-family: inherit;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .help-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .btn {
+      display: inline-block;
+      width: 100%;
+      padding: 12px;
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn:hover {
+      background: var(--primary-hover);
+    }
+
+    .status {
+      margin-top: 16px;
+      font-size: 14px;
+      text-align: center;
+      padding: 10px;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .status.success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      display: block;
+    }
+
+    .footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+      padding-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>LinkGenie</h1>
+    <div class="subtitle">Configuration settings for your LinkedIn AI helper.</div>
+
+    <div class="form-group">
+      <label for="apiUrl">Backend API URL</label>
+      <input type="text" id="apiUrl" placeholder="http://localhost:3000/api/generate">
+      <div class="help-text">Endpoint of the server that manages LLM credentials and prompt generation.</div>
+    </div>
+
+    <div class="form-group">
+      <label for="persona">My Persona / Context (Optional)</label>
+      <textarea id="persona" placeholder="e.g. A staff software engineer specializing in web performance, React, and browser extensions. Tone: constructive and technical."></textarea>
+      <div class="help-text">Explain your background, role, or preferred response style. The AI will weave this into draft replies.</div>
+    </div>
+
+    <button id="saveBtn" class="btn">Save Configuration</button>
+
+    <div id="status" class="status">Settings saved!</div>
+
+    <div class="footer">
+      This extension operates offline-first and communicates only with your configured backend API.
+    </div>
+  </div>
+
+  <script src="../dist/options.js"></script>
+</body>
+</html>

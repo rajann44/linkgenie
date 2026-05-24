@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "LinkGenie",
+  "version": "1.0.0",
+  "description": "Draft professional, contextual LinkedIn replies inline using AI with LinkGenie.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*.linkedin.com/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "dist/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.linkedin.com/*"
+      ],
+      "js": [
+        "dist/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_ui": {
+    "page": "src/options.html",
+    "open_in_tab": true
+  },
+  "action": {
+    "default_title": "LinkedIn AI Reply Config"
+  }
+}
