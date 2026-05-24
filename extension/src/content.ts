@@ -90,20 +90,10 @@ function isInsideCommentSection(el: HTMLElement, stopAt?: HTMLElement): boolean 
  * Traverses up from a comment composer to find the parent post text content.
  */
 function extractPostText(editor: HTMLElement): string {
+  // 1. Find the parent post card
   let current: HTMLElement | null = editor;
   let postCardElement: HTMLElement | null = null;
-
-  // 1. Climb up to find the main post container (article, listitem, or container card)
   while (current) {
-    // Check if the current ancestor wraps the main description text (strong structural indicator of the post card)
-    const descriptionElement = current.querySelector(
-      'p[componentkey*="feed-commentary"], [componentkey*="commentary"], [class*="commentary"], [class*="description-text"]'
-    );
-    if (descriptionElement) {
-      postCardElement = current;
-      break;
-    }
-
     const role = current.getAttribute('role') || '';
     const compKey = current.getAttribute('componentkey') || '';
     if (
@@ -120,7 +110,7 @@ function extractPostText(editor: HTMLElement): string {
     current = current.parentElement;
   }
 
-  // Fallback: If we couldn't find the container card, climb up 16 levels to reach past the comments section
+  // Fallback if no container card is found
   if (!postCardElement) {
     let temp = editor;
     for (let i = 0; i < 16; i++) {
@@ -134,107 +124,104 @@ function extractPostText(editor: HTMLElement): string {
     return '';
   }
 
-  console.log('AI Reply Extension: Found post card container:', postCardElement);
+  console.log('AI Reply Extension: Found post card container:', postCardElement.tagName, postCardElement.className);
 
-  // 2. Try to find the text container using known post text selectors
-  for (const selector of SELECTORS.postText) {
-    const els = postCardElement.querySelectorAll(selector);
-    for (let i = 0; i < els.length; i++) {
-      const el = els[i] as HTMLElement;
-      if (!isInsideCommentSection(el, postCardElement) && !el.closest('#ai-reply-assistant-root')) {
-        let text = (el.textContent || '').trim();
-        // Clean "see more" if it's appended by LinkedIn
-        text = text.replace(/\bsee\s+more\b/gi, '').trim();
-        if (text.length > 15) {
-          console.log(`AI Reply Extension: Found post text via selector "${selector}":`, text);
-          return text;
-        }
-      }
+  // Find the comments section container (the child of postCardElement that contains the editor)
+  let commentsContainer: HTMLElement | null = null;
+  let curr = editor;
+  while (curr && curr.parentElement && curr.parentElement !== postCardElement) {
+    curr = curr.parentElement;
+  }
+  if (curr && curr.parentElement === postCardElement) {
+    commentsContainer = curr;
+  }
+
+  // Find the header container by climbing up from the profile link
+  let headerContainer: HTMLElement | null = null;
+  const profileLink = postCardElement.querySelector('a[href*="/in/"], a[href*="/company/"]');
+  if (profileLink) {
+    let currHeader = profileLink as HTMLElement;
+    while (currHeader && currHeader.parentElement && currHeader.parentElement !== postCardElement) {
+      currHeader = currHeader.parentElement;
+    }
+    if (currHeader && currHeader.parentElement === postCardElement) {
+      headerContainer = currHeader;
     }
   }
 
-  // 3. Fallback to class-agnostic rules if known selectors don't yield results
-  // We want to find the main post text content. It is typically the longest text container
-  // that is NOT part of a comment, an input editor, a form, or profile headers/footers/buttons.
-  const candidateTexts: string[] = [];
+  // Now, collect all text segments from p and span elements inside the post card
+  // excluding commentsContainer, headerContainer, and other noise
+  const paragraphs = postCardElement.querySelectorAll('p, span, [class*="commentary"]');
+  const validSegments: string[] = [];
 
-  // Query all divs, spans, and paragraphs in the card
-  const textElements = postCardElement.querySelectorAll('span, div, p');
-  
-  textElements.forEach((el) => {
-    const htmlEl = el as HTMLElement;
+  paragraphs.forEach((p) => {
+    const el = p as HTMLElement;
 
-    // Skip if it is inside comments, our modal, the active comment editor, or a form
+    // Skip if it's inside the comments container
+    if (commentsContainer && commentsContainer.contains(el)) {
+      return;
+    }
+
+    // Skip if it's inside the header container
+    if (headerContainer && headerContainer.contains(el)) {
+      return;
+    }
+
+    // Skip if it is a link to a profile/company itself
+    if (el.closest('a[href*="/in/"], a[href*="/company/"]')) {
+      return;
+    }
+
+    // Skip if it's inside our own assistant root
+    if (el.closest('#ai-reply-assistant-root')) {
+      return;
+    }
+
+    // Skip if it's the editor itself
+    if (el.closest('div[contenteditable="true"]') || el.tagName === 'TEXTAREA') {
+      return;
+    }
+
+    // Skip social action sections
     if (
-      isInsideCommentSection(htmlEl, postCardElement) ||
-      htmlEl.closest('#ai-reply-assistant-root') || 
-      htmlEl.closest('div[contenteditable="true"]') ||
-      htmlEl.closest('form') ||
-      htmlEl.closest('.ai-reply-adhoc-bar')
+      el.closest('[class*="social-"]') ||
+      el.closest('[class*="action-bar"]') ||
+      el.closest('[class*="footer"]') ||
+      el.closest('.feed-shared-social-action-bar') ||
+      el.closest('.feed-shared-social-counts')
     ) {
       return;
     }
 
-    // Exclude author profile/header sections from being considered the main post content
-    if (
-      htmlEl.closest('[class*="actor"]') ||
-      htmlEl.closest('[class*="profile"]') ||
-      htmlEl.closest('[class*="header"]') ||
-      htmlEl.closest('.feed-shared-actor') ||
-      htmlEl.closest('.update-components-actor')
-    ) {
-      return;
-    }
-
-    // Exclude social footer/actions sections
-    if (
-      htmlEl.closest('[class*="social-"]') ||
-      htmlEl.closest('[class*="action-bar"]') ||
-      htmlEl.closest('[class*="footer"]') ||
-      htmlEl.closest('.feed-shared-social-action-bar') ||
-      htmlEl.closest('.feed-shared-social-counts')
-    ) {
-      return;
-    }
-
-    const text = (htmlEl.textContent || '').trim();
+    let text = (el.textContent || '').trim();
     
-    // Ignore reaction counts, dates, short standard headers, and buttons
+    // Clean "see more" link text if appended
+    text = text.replace(/\bsee\s+more\b/gi, '').trim();
+
+    // Skip social action text or numbers
+    const lowerText = text.toLowerCase();
     if (
-      text.length > 15 && 
-      !text.includes('Like') && 
-      !text.includes('Comment') && 
-      !text.includes('Repost') && 
-      !text.includes('Send') &&
-      !text.startsWith('http')
+      text.length > 10 &&
+      !lowerText.includes('like') &&
+      !lowerText.includes('comment') &&
+      !lowerText.includes('repost') &&
+      !lowerText.includes('send') &&
+      !/^\d+$/.test(text) &&
+      !lowerText.includes('reactions')
     ) {
-      // Clean "see more" if it's appended by LinkedIn
-      const cleaned = text.replace(/\bsee\s+more\b/gi, '').trim();
-      if (cleaned) {
-        candidateTexts.push(cleaned);
+      // Prevent duplicates (e.g. if we matched both a parent p and an inner span)
+      const dupIndex = validSegments.findIndex(existing => existing.includes(text) || text.includes(existing));
+      if (dupIndex !== -1) {
+        if (text.length > validSegments[dupIndex].length) {
+          validSegments[dupIndex] = text;
+        }
+      } else {
+        validSegments.push(text);
       }
     }
   });
 
-  let finalPostText = '';
-  if (candidateTexts.length > 0) {
-    // Sort candidate texts by length descending and return the longest one
-    candidateTexts.sort((a, b) => b.length - a.length);
-    finalPostText = candidateTexts[0];
-    console.log('AI Reply Extension: Scraped Post Content (Fallback Candidates):', candidateTexts);
-  } else {
-    // Fallback to paragraph accumulation excluding comments
-    const paragraphs = postCardElement.querySelectorAll('p');
-    let gatheredText = '';
-    paragraphs.forEach((p) => {
-      const htmlP = p as HTMLElement;
-      if (!isInsideCommentSection(htmlP, postCardElement) && !htmlP.closest('#ai-reply-assistant-root')) {
-        gatheredText += (htmlP.textContent || '').trim() + ' ';
-      }
-    });
-    finalPostText = gatheredText.trim();
-  }
-
+  const finalPostText = validSegments.join('\n\n').trim();
   console.log('AI Reply Extension: Scraped Post Content (Final):', finalPostText);
   return finalPostText;
 }
@@ -753,6 +740,14 @@ function ensureShadowRoot(): ShadowRoot {
       </div>
       <div class="modal-body">
         
+        <!-- Post Preview Container -->
+        <div class="post-preview-container">
+          <div class="post-preview-header" id="togglePreview">
+            <span>Post Context Preview</span>
+            <span id="previewArrow">▼</span>
+          </div>
+          <div class="post-preview-body" id="postPreviewBody">Loading post text...</div>
+        </div>
 
         <!-- Tone and Length selectors -->
         <div class="controls-grid">
@@ -827,6 +822,17 @@ function ensureShadowRoot(): ShadowRoot {
       hideModal();
     }
   });
+
+  // Toggle Post Preview collapse/expand
+  const togglePreview = shadow.getElementById('togglePreview');
+  const postPreviewBody = shadow.getElementById('postPreviewBody');
+  const previewArrow = shadow.getElementById('previewArrow');
+  if (togglePreview && postPreviewBody && previewArrow) {
+    togglePreview.addEventListener('click', () => {
+      const isCollapsed = postPreviewBody.classList.toggle('collapsed');
+      previewArrow.textContent = isCollapsed ? '▲' : '▼';
+    });
+  }
 
 
 
@@ -934,7 +940,11 @@ function openAIModal(editor: HTMLElement, container: HTMLElement) {
 
   const shadow = ensureShadowRoot();
   
-
+  // Set preview text
+  const postPreviewBody = shadow.getElementById('postPreviewBody') as HTMLDivElement;
+  if (postPreviewBody) {
+    postPreviewBody.textContent = activePostText || '(No post text detected. A generic reply will be generated.)';
+  }
 
   // Reset text area
   const draftTextarea = shadow.getElementById('draftTextarea') as HTMLTextAreaElement;
