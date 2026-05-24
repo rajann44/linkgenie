@@ -32,6 +32,7 @@
     "open_in_tab": true
   },
   "action": {
-    "default_title": "LinkedIn AI Reply Config"
+    "default_title": "LinkGenie Configuration",
+    "default_popup": "src/options.html"
   }
 }
