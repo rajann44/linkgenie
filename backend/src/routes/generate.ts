@@ -75,7 +75,15 @@ Format: Return ONLY the raw reply text. Do not wrap the response in quotation ma
  */
 router.post('/generate', async (req: Request, res: Response) => {
   try {
-    const { postText, tone = 'professional', length = 'short', persona = '' } = req.body;
+    const { 
+      postText, 
+      tone = 'professional', 
+      length = 'short', 
+      persona = '',
+      provider: clientProvider = '',
+      apiKey = '',
+      model = ''
+    } = req.body;
 
     // Sanitize postText - allow empty/unspecified postText for generic fallback comments
     const cleanPostText = (postText && typeof postText === 'string') ? postText.trim() : '';
@@ -84,11 +92,16 @@ router.post('/generate', async (req: Request, res: Response) => {
     const activeTone = VALID_TONES.includes(tone) ? tone : 'professional';
     const activeLength = VALID_LENGTHS.includes(length) ? length : 'short';
 
+    const activeProvider = (clientProvider || process.env.LLM_PROVIDER || 'gemini').toLowerCase();
+
     // Structured server log for observability
     console.log(`==================================================`);
     console.log(`[POST /api/generate] Request Received:`);
+    console.log(`  - Provider: ${activeProvider}`);
     console.log(`  - Tone: ${activeTone}`);
     console.log(`  - Length: ${activeLength}`);
+    console.log(`  - Key provided: ${apiKey ? 'Yes (Client)' : 'No (Fallback to Server Env)'}`);
+    console.log(`  - Model override: ${model || '(None)'}`);
     console.log(`  - Scraped Text: ${cleanPostText ? `"${cleanPostText.substring(0, 120)}..." (${cleanPostText.length} chars)` : "(EMPTY - FALLBACK TO GENERAL COMMENT)"}`);
     console.log(`==================================================`);
 
@@ -106,8 +119,12 @@ ${cleanPostText.substring(0, 3000)}
 Draft a reply to this post following your system instructions.`;
     }
 
-    const provider = process.env.LLM_PROVIDER || 'gemini';
-    const reply = await LLMService.generate(provider, { prompt, systemInstruction });
+    const reply = await LLMService.generate(activeProvider, { 
+      prompt, 
+      systemInstruction, 
+      apiKey, 
+      model 
+    });
 
     return res.json({ reply });
   } catch (error: any) {

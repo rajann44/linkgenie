@@ -73,7 +73,7 @@
       color: var(--text-color);
     }
 
-    input[type="text"], textarea {
+    input[type="text"], input[type="password"], select, textarea {
       width: 100%;
       padding: 12px;
       background: rgba(15, 23, 42, 0.6);
@@ -85,10 +85,15 @@
       transition: all 0.3s ease;
     }
 
-    input[type="text"]:focus, textarea:focus {
+    input[type="text"]:focus, input[type="password"]:focus, select:focus, textarea:focus {
       outline: none;
       border-color: var(--primary-color);
       box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    }
+
+    select option {
+      background: #0f172a;
+      color: var(--text-color);
     }
 
     textarea {
@@ -155,6 +160,28 @@
       <label for="apiUrl">Backend API URL</label>
       <input type="text" id="apiUrl" placeholder="http://localhost:3000/api/generate">
       <div class="help-text">Endpoint of the server that manages LLM credentials and prompt generation.</div>
+    </div>
+
+    <div class="form-group">
+      <label for="provider">LLM Provider</label>
+      <select id="provider">
+        <option value="gemini">Google Gemini</option>
+        <option value="openai">OpenAI</option>
+        <option value="anthropic">Anthropic Claude</option>
+      </select>
+      <div class="help-text">Select your preferred AI generation provider.</div>
+    </div>
+
+    <div class="form-group">
+      <label for="apiKey">API Key</label>
+      <input type="password" id="apiKey" placeholder="Enter your provider API Key">
+      <div class="help-text">Your API key is stored securely in your browser and is never shared publicly.</div>
+    </div>
+
+    <div class="form-group">
+      <label for="model">Model Name (Optional Override)</label>
+      <input type="text" id="model" placeholder="e.g. gemini-1.5-flash">
+      <div class="help-text">Leave blank to use the backend default for the selected provider.</div>
     </div>
 
     <div class="form-group">

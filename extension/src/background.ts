@@ -4,8 +4,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     const { postText, tone, length } = message;
 
     // Fetch settings from chrome.storage
-    chrome.storage.sync.get(['apiUrl', 'persona'], async (items) => {
+    chrome.storage.sync.get(['apiUrl', 'provider', 'apiKey', 'model', 'persona'], async (items) => {
       const apiUrl = items.apiUrl || 'http://localhost:3000/api/generate';
+      const provider = items.provider || 'gemini';
+      const apiKey = items.apiKey || '';
+      const model = items.model || '';
       const persona = items.persona || '';
 
       try {
@@ -23,7 +26,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             postText,
             tone,
             length,
-            persona
+            persona,
+            provider,
+            apiKey,
+            model
           }),
           signal: controller.signal
         });

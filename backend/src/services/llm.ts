@@ -11,58 +11,14 @@ dotenv.config();
 export interface LLMRequest {
   prompt: string;
   systemInstruction: string;
+  apiKey?: string;
+  model?: string;
 }
 
 /**
  * Abstract Service class managing multi-provider LLM inference
  */
 export class LLMService {
-  private static geminiClient: GoogleGenerativeAI | null = null;
-  private static openaiClient: OpenAI | null = null;
-  private static anthropicClient: Anthropic | null = null;
-
-  /**
-   * Initializes and retrieves the Gemini API client
-   */
-  private static getGeminiClient(): GoogleGenerativeAI {
-    if (!this.geminiClient) {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        throw new Error('GEMINI_API_KEY is not defined in environment variables.');
-      }
-      this.geminiClient = new GoogleGenerativeAI(apiKey);
-    }
-    return this.geminiClient;
-  }
-
-  /**
-   * Initializes and retrieves the OpenAI API client
-   */
-  private static getOpenAIClient(): OpenAI {
-    if (!this.openaiClient) {
-      const apiKey = process.env.OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error('OPENAI_API_KEY is not defined in environment variables.');
-      }
-      this.openaiClient = new OpenAI({ apiKey });
-    }
-    return this.openaiClient;
-  }
-
-  /**
-   * Initializes and retrieves the Anthropic API client
-   */
-  private static getAnthropicClient(): Anthropic {
-    if (!this.anthropicClient) {
-      const apiKey = process.env.ANTHROPIC_API_KEY;
-      if (!apiKey) {
-        throw new Error('ANTHROPIC_API_KEY is not defined in environment variables.');
-      }
-      this.anthropicClient = new Anthropic({ apiKey });
-    }
-    return this.anthropicClient;
-  }
-
   /**
    * Routes the generation request to the selected provider
    */
@@ -85,11 +41,15 @@ export class LLMService {
    * Generates text using Google Gemini
    */
   private static async callGemini(params: LLMRequest): Promise<string> {
-    const client = this.getGeminiClient();
-    const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
-    
+    const apiKey = params.apiKey || process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY is not defined (neither in extension options nor in backend environment).');
+    }
+
+    const modelName = params.model || process.env.GEMINI_MODEL || 'gemini-1.5-flash';
     console.log(`LLMService: Calling Gemini model (${modelName})...`);
-    
+
+    const client = new GoogleGenerativeAI(apiKey);
     const model = client.getGenerativeModel({
       model: modelName,
       systemInstruction: params.systemInstruction
@@ -115,11 +75,15 @@ export class LLMService {
    * Generates text using OpenAI
    */
   private static async callOpenAI(params: LLMRequest): Promise<string> {
-    const client = this.getOpenAIClient();
-    const modelName = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+    const apiKey = params.apiKey || process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY is not defined (neither in extension options nor in backend environment).');
+    }
 
+    const modelName = params.model || process.env.OPENAI_MODEL || 'gpt-4o-mini';
     console.log(`LLMService: Calling OpenAI model (${modelName})...`);
 
+    const client = new OpenAI({ apiKey });
     const chatCompletion = await client.chat.completions.create({
       messages: [
         { role: 'system', content: params.systemInstruction },
@@ -142,11 +106,15 @@ export class LLMService {
    * Generates text using Anthropic Claude
    */
   private static async callAnthropic(params: LLMRequest): Promise<string> {
-    const client = this.getAnthropicClient();
-    const modelName = process.env.ANTHROPIC_MODEL || 'claude-3-haiku-20240307';
+    const apiKey = params.apiKey || process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      throw new Error('ANTHROPIC_API_KEY is not defined (neither in extension options nor in backend environment).');
+    }
 
+    const modelName = params.model || process.env.ANTHROPIC_MODEL || 'claude-3-haiku-20240307';
     console.log(`LLMService: Calling Anthropic model (${modelName})...`);
 
+    const client = new Anthropic({ apiKey });
     const message = await client.messages.create({
       model: modelName,
       max_tokens: 500,
