@@ -89,13 +89,98 @@ function isInsideCommentSection(el: HTMLElement, stopAt?: HTMLElement): boolean 
 /**
  * Traverses up from a comment composer to find the parent post text content.
  */
+/**
+ * Fast-path: Climbs up from the editor to find the closest ancestor containing a post description element
+ * that is not nested inside any comments container.
+ */
+function findDescriptionByClimbing(editor: HTMLElement): string {
+  let temp: HTMLElement | null = editor;
+  const descriptionSelectors = [
+    '.expandable-text-box',
+    '.feed-shared-inline-show-more-text',
+    'p[componentkey*="feed-commentary"]',
+    '[class*="commentary"]',
+    '.feed-shared-update-v2__description-text',
+    '.update-components-text'
+  ];
+
+  while (temp) {
+    if (temp.tagName === 'BODY' || temp.tagName === 'HTML') break;
+
+    // Check if the current ancestor contains any known description element
+    for (const selector of descriptionSelectors) {
+      const descEl = temp.querySelector(selector) as HTMLElement;
+      if (descEl) {
+        // Verify that this description element is not inside a comments container or a comment item
+        let isDescInsideComments = false;
+        let currParent: HTMLElement | null = descEl;
+        while (currParent && currParent !== temp) {
+          const parentClassName = (currParent.className || '').toLowerCase();
+          const parentCompKey = (currParent.getAttribute('componentkey') || '').toLowerCase();
+          
+          if (
+            (parentClassName.includes('comment') && !parentClassName.includes('commentary')) ||
+            (parentCompKey.includes('comment') && !parentCompKey.includes('commentary')) ||
+            currParent.closest('.comments-comment-item') ||
+            currParent.closest('.comment-item')
+          ) {
+            isDescInsideComments = true;
+            break;
+          }
+          currParent = currParent.parentElement;
+        }
+
+        if (!isDescInsideComments) {
+          let text = (descEl.textContent || '').trim();
+          // Clean "see more" link text
+          text = text.replace(/\bsee\s+more\b/gi, '').trim();
+          if (text.length > 10) {
+            console.log(`AI Reply Extension: Found post text via climbing fast-path selector "${selector}":`, text);
+            return text;
+          }
+        }
+      }
+    }
+
+    // Stop climbing if we hit a post card boundary to avoid matching other posts in the feed
+    const role = temp.getAttribute('role') || '';
+    const compKey = temp.getAttribute('componentkey') || '';
+    if (
+      temp.tagName === 'ARTICLE' ||
+      temp.hasAttribute('data-urn') ||
+      role === 'listitem' ||
+      compKey.includes('FeedType_MAIN_FEED') ||
+      temp.classList.contains('feed-shared-update-v2') ||
+      temp.classList.contains('occludable-update') ||
+      temp.classList.contains('feed-shared-update')
+    ) {
+      break;
+    }
+
+    temp = temp.parentElement;
+  }
+  return '';
+}
+
+/**
+ * Traverses up from a comment composer to find the parent post text content.
+ */
 function extractPostText(editor: HTMLElement): string {
-  // 1. Find the parent post card, bypassing nested comment items
+  // 1. Try climbing fast-path first
+  const fastPathText = findDescriptionByClimbing(editor);
+  if (fastPathText) {
+    return fastPathText;
+  }
+
+  console.log('AI Reply Extension: Fast-path failed. Falling back to structured climbers...');
+
+  // 2. Find the parent post card, bypassing nested comment items and comments containers
   let current: HTMLElement | null = editor;
   let postCardElement: HTMLElement | null = null;
   while (current) {
     const role = current.getAttribute('role') || '';
     const compKey = current.getAttribute('componentkey') || '';
+    const className = (current.className || '').toLowerCase();
     
     // Check if the current element belongs to a comment item so we keep climbing
     const isComment = current.classList.contains('comments-comment-item') ||
@@ -104,7 +189,10 @@ function extractPostText(editor: HTMLElement): string {
                       current.closest('.comment-item') ||
                       (current.getAttribute('data-id') || '').startsWith('comment-');
 
-    if (!isComment) {
+    // Also check if the current element is a comments section container itself
+    const isCommentSection = className.includes('comment') && !className.includes('commentary');
+
+    if (!isComment && !isCommentSection) {
       if (
         current.tagName === 'ARTICLE' ||
         current.hasAttribute('data-urn') ||
@@ -147,20 +235,34 @@ function extractPostText(editor: HTMLElement): string {
     commentsContainer = curr;
   }
 
-  // Find the header container by climbing up from the profile link
+  // Find the header container (specifically actors/headers)
   let headerContainer: HTMLElement | null = null;
-  const profileLink = postCardElement.querySelector('a[href*="/in/"], a[href*="/company/"]');
-  if (profileLink) {
-    let currHeader = profileLink as HTMLElement;
-    while (currHeader && currHeader.parentElement && currHeader.parentElement !== postCardElement) {
-      currHeader = currHeader.parentElement;
-    }
-    if (currHeader && currHeader.parentElement === postCardElement) {
-      headerContainer = currHeader;
+  const actorContainer = postCardElement.querySelector('.feed-shared-actor, .update-components-actor, [class*="actor"], [class*="header"]');
+  if (actorContainer) {
+    headerContainer = actorContainer as HTMLElement;
+  } else {
+    // Only resolve via profile link if it is inside an actor/header container
+    const profileLink = postCardElement.querySelector('a[href*="/in/"], a[href*="/company/"]');
+    if (profileLink) {
+      const linkParent = profileLink.closest('.feed-shared-actor, .update-components-actor, [class*="actor"], [class*="header"]');
+      if (linkParent) {
+        headerContainer = linkParent as HTMLElement;
+      } else {
+        // Last resort: climb up but limit it so it doesn't resolve to description wrapper
+        let currHeader = profileLink as HTMLElement;
+        let depth = 0;
+        while (currHeader && currHeader.parentElement && currHeader.parentElement !== postCardElement && depth < 4) {
+          currHeader = currHeader.parentElement;
+          depth++;
+        }
+        if (currHeader && currHeader.parentElement === postCardElement) {
+          headerContainer = currHeader;
+        }
+      }
     }
   }
 
-  // 2. Try to query known selectors FIRST (explicitly checking .expandable-text-box)
+  // 3. Try to query known selectors FIRST (explicitly checking .expandable-text-box)
   const knownSelectors = [
     '.expandable-text-box',
     '.feed-shared-inline-show-more-text',
@@ -171,9 +273,11 @@ function extractPostText(editor: HTMLElement): string {
   for (const selector of knownSelectors) {
     const el = postCardElement.querySelector(selector) as HTMLElement;
     if (el) {
-      // Make sure it's not inside comments or header
+      // Make sure it's not inside comments
       const insideComments = commentsContainer && commentsContainer.contains(el);
-      const insideHeader = headerContainer && headerContainer.contains(el);
+      // Only check insideHeader if selector is not the description itself (.expandable-text-box is never header)
+      const insideHeader = (selector !== '.expandable-text-box') && headerContainer && headerContainer.contains(el);
+      
       if (!insideComments && !insideHeader) {
         let text = (el.textContent || '').trim();
         text = text.replace(/\bsee\s+more\b/gi, '').trim();
@@ -185,7 +289,7 @@ function extractPostText(editor: HTMLElement): string {
     }
   }
 
-  // 3. Fallback to class-agnostic scanner if known selectors fail
+  // 4. Fallback to class-agnostic scanner if known selectors fail
   console.log('AI Reply Extension: Primary selectors failed. Falling back to class-agnostic scanner...');
   const paragraphs = postCardElement.querySelectorAll('p, span');
   const validSegments: string[] = [];
