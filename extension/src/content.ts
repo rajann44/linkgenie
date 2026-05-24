@@ -43,6 +43,7 @@ let shadowRootElement: ShadowRoot | null = null;
 
 // Debounce helper
 let scanTimeout: number | null = null;
+let isGenerating = false;
 
 /**
  * Traverses up from a comment composer to find the parent post text content.
@@ -869,16 +870,26 @@ function ensureShadowRoot(): ShadowRoot {
  * Triggers API call via background script to generate reply draft.
  */
 function triggerGeneration() {
+  if (isGenerating) {
+    console.log('AI Reply Extension: Generation already in progress. Ignoring duplicate trigger.');
+    return;
+  }
+  isGenerating = true;
+
   const shadow = ensureShadowRoot();
   const loadingOverlay = shadow.getElementById('loadingOverlay') as HTMLDivElement;
   const errorContainer = shadow.getElementById('errorContainer') as HTMLDivElement;
   const draftTextarea = shadow.getElementById('draftTextarea') as HTMLTextAreaElement;
   const insertBtn = shadow.getElementById('insertBtn') as HTMLButtonElement;
+  const regenerateBtn = shadow.getElementById('regenerateBtn') as HTMLButtonElement;
 
   // Clear states
   errorContainer.classList.remove('active');
   loadingOverlay.classList.add('active');
   insertBtn.disabled = true;
+  if (regenerateBtn) {
+    regenerateBtn.disabled = true;
+  }
 
   chrome.runtime.sendMessage(
     {
@@ -888,7 +899,11 @@ function triggerGeneration() {
       length: currentLength
     },
     (response) => {
+      isGenerating = false;
       loadingOverlay.classList.remove('active');
+      if (regenerateBtn) {
+        regenerateBtn.disabled = false;
+      }
 
       if (chrome.runtime.lastError) {
         console.error('AI Reply Extension: Message error:', chrome.runtime.lastError);
