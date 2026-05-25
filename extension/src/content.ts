@@ -716,6 +716,22 @@ function triggerGeneration() {
   );
 }
 
+// Helper to climb up from the comment editor and locate the post commentary text
+function findPostTextFromEditor(editor: HTMLElement): string {
+  let parent: HTMLElement | null = editor;
+  let depth = 0;
+  const maxDepth = 15;
+  while (parent && depth < maxDepth) {
+    const postParagraph = parent.querySelector('p[componentkey^="feed-commentary"]') as HTMLElement | null;
+    if (postParagraph) {
+      return (postParagraph.innerText || '').trim();
+    }
+    parent = parent.parentElement;
+    depth++;
+  }
+  return '';
+}
+
 /**
  * Open the modal, prefill contexts, and start generation.
  */
@@ -725,10 +741,13 @@ function openAIModal(editor: HTMLElement, container: HTMLElement) {
 
   const shadow = ensureShadowRoot();
   
-  // Clear post content input and draft textarea
+  // Automatically scrape post text by climbing from the editor
+  const scrapedText = findPostTextFromEditor(editor);
+
+  // Populate post content input and clear draft textarea
   const postContentInput = shadow.getElementById('postContentInput') as HTMLTextAreaElement;
   if (postContentInput) {
-    postContentInput.value = '';
+    postContentInput.value = scrapedText;
   }
   const draftTextarea = shadow.getElementById('draftTextarea') as HTMLTextAreaElement;
   if (draftTextarea) {
@@ -869,124 +888,10 @@ function findToolbar(editor: HTMLElement): HTMLElement | null {
   return null;
 }
 
-const COPY_ICON_SVG = `
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
-    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-  </svg>
-`;
-
-const CHECK_ICON_SVG = `
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#05b03d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
-    <polyline points="20 6 9 17 4 12"></polyline>
-  </svg>
-`;
-
-/**
- * Locate all posts on page and inject a copy button into their top-right header menu group.
- */
-function injectCopyButtons() {
-  const paragraphs = document.querySelectorAll('p[componentkey^="feed-commentary"]');
-
-  paragraphs.forEach(paragraph => {
-    const pElement = paragraph as HTMLElement;
-    
-    // Climb up to find the common post root container card
-    const postRoot = pElement.closest('article') || 
-                     pElement.closest('[data-urn]') || 
-                     pElement.closest('.feed-shared-update-v2') || 
-                     pElement.parentElement?.closest('div');
-    
-    if (!postRoot) return;
-
-    // Avoid duplicate injections
-    if (postRoot.getAttribute('data-copy-injected') === 'true') {
-      return;
-    }
-
-    // Locate the control menu ("...") button inside this post root
-    const controlBtn = postRoot.querySelector('button[aria-label^="Open control menu"]') as HTMLButtonElement | null;
-    if (!controlBtn) return;
-
-    // Locate the header control menu button group container
-    const controlMenuContainer = controlBtn.closest('.feed-shared-update-v2__control-menu') || controlBtn.parentElement;
-    if (!controlMenuContainer) return;
-
-    // Mark post card as injected
-    postRoot.setAttribute('data-copy-injected', 'true');
-
-    // Create the Copy Button styled like LinkedIn's round Artdeco icon buttons
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--1 artdeco-button--tertiary linkedin-post-copy-button';
-    copyBtn.type = 'button';
-    copyBtn.title = 'Copy post text';
-    copyBtn.innerHTML = COPY_ICON_SVG;
-
-    // Apply strict matching layout tokens to align beautifully next to "..." and "X"
-    copyBtn.style.cssText = `
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      vertical-align: middle;
-      width: 32px;
-      height: 32px;
-      min-width: 32px;
-      min-height: 32px;
-      padding: 0;
-      margin: 0 4px;
-      background: transparent;
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      color: rgba(0, 0, 0, 0.6);
-      transition: background-color 0.15s, color 0.15s;
-    `;
-
-    // Add interactive hover states
-    copyBtn.addEventListener('mouseenter', () => {
-      copyBtn.style.backgroundColor = 'rgba(0, 0, 0, 0.08)';
-      copyBtn.style.color = 'rgba(0, 0, 0, 0.9)';
-    });
-
-    copyBtn.addEventListener('mouseleave', () => {
-      copyBtn.style.backgroundColor = 'transparent';
-      copyBtn.style.color = 'rgba(0, 0, 0, 0.6)';
-    });
-
-    // Handle copying and visual checkmark state on click
-    copyBtn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-
-      const textToCopy = pElement.innerText || '';
-      if (!textToCopy) return;
-
-      try {
-        await navigator.clipboard.writeText(textToCopy);
-
-        // Success state feedback
-        copyBtn.innerHTML = CHECK_ICON_SVG;
-        
-        setTimeout(() => {
-          copyBtn.innerHTML = COPY_ICON_SVG;
-        }, 1500);
-      } catch (err) {
-        console.error('Failed to copy post text contents:', err);
-      }
-    });
-
-    // Append our native-styled button to the control menu container
-    // We insert it as the first child of the control group container (so it sits to the left of "...")
-    controlMenuContainer.insertBefore(copyBtn, controlMenuContainer.firstChild);
-  });
-}
-
 /**
  * Scans page for comment boxes and injects the "AI Reply" button.
  */
 function scanAndInject() {
-  // Inject post copy buttons into headers
-  injectCopyButtons();
   // Query all contenteditable fields or textareas on the page
   const editors = document.querySelectorAll('div[contenteditable="true"], textarea.comments-comment-textbox__textarea');
 
