@@ -1023,6 +1023,89 @@ function injectMainPageStyles() {
 }
 
 /**
+ * Resolves all action bars on the page, including standard and obfuscated layout versions.
+ */
+function findActionBars(): HTMLElement[] {
+  const bars = new Set<HTMLElement>();
+  
+  // 1. Try standard selectors
+  const selectors = [
+    '.feed-shared-social-action-bar',
+    '.social-actions',
+    '.feed-shared-social-actions'
+  ];
+  selectors.forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => bars.add(el as HTMLElement));
+  });
+  
+  // 2. Try SVG-based resolution (helps with obfuscated/dynamic class structures)
+  const svgIds = [
+    '#thumbs-up-outline-small',
+    '#thumbs-up-outline-medium',
+    '#comment-small',
+    '#comment-medium',
+    '#repost-small',
+    '#repost-medium',
+    '#send-privately-small',
+    '#send-privately-medium'
+  ];
+  svgIds.forEach(id => {
+    document.querySelectorAll(`svg${id}`).forEach(svg => {
+      const btn = svg.closest('button, a');
+      if (btn && btn.parentElement) {
+        bars.add(btn.parentElement as HTMLElement);
+      }
+    });
+  });
+  
+  return Array.from(bars);
+}
+
+/**
+ * Programmatically constructs custom-styled SVG and text structure matching LinkedIn's native buttons.
+ */
+function buildButtonContent(label: string, isSuccess: boolean, classes: { spanClasses: string; textDivClasses: string; textSpanClasses: string }): string {
+  const { spanClasses, textDivClasses, textSpanClasses } = classes;
+  
+  const iconSvg = isSuccess ? `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="linkgenie-copy-icon" style="margin-right: 4px; vertical-align: middle;">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  ` : `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="linkgenie-copy-icon" style="margin-right: 4px; vertical-align: middle;">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    </svg>
+  `;
+
+  if (spanClasses) {
+    let html = `<span class="${spanClasses}">${iconSvg}`;
+    if (textDivClasses) {
+      html += `<div class="${textDivClasses}">`;
+      if (textSpanClasses) {
+        html += `<span class="${textSpanClasses}"><span class="linkgenie-btn-text">${label}</span></span>`;
+      } else {
+        html += `<span class="linkgenie-btn-text">${label}</span>`;
+      }
+      html += `</div>`;
+    } else if (textSpanClasses) {
+      html += `<span class="${textSpanClasses}"><span class="linkgenie-btn-text">${label}</span></span>`;
+    } else {
+      html += `<span class="linkgenie-btn-text">${label}</span>`;
+    }
+    html += `</span>`;
+    return html;
+  } else {
+    return `
+      <span class="artdeco-button__text">
+        ${iconSvg}
+        <span class="linkgenie-btn-text">${label}</span>
+      </span>
+    `;
+  }
+}
+
+/**
  * Scans page for comment boxes and injects the "AI Reply" button,
  * and also injects "Copy Post" overlay/action-bar buttons.
  */
@@ -1110,170 +1193,161 @@ function scanAndInject() {
   });
 
   // 1.5. Inject Clipboard Copy buttons into social action bars (Like/Comment/Repost/Send row)
-  const actionBarSelectors = [
-    '.feed-shared-social-action-bar',
-    '.social-actions',
-    '.feed-shared-social-actions'
-  ];
+  const bars = findActionBars();
+  bars.forEach((bar) => {
+    const htmlBar = bar as HTMLElement;
 
-  actionBarSelectors.forEach((selector) => {
-    const bars = document.querySelectorAll(selector);
-    bars.forEach((bar) => {
-      const htmlBar = bar as HTMLElement;
+    // Check if we've already injected for this action bar
+    if (htmlBar.getAttribute('data-lg-copy-bar-injected') === 'true') {
+      return;
+    }
 
-      // Check if we've already injected for this action bar
-      if (htmlBar.getAttribute('data-lg-copy-bar-injected') === 'true') {
+    // Find a sibling button in the action bar to clone classes and nested structures from
+    // Select the second child button/a or comment button (which usually has nested structure)
+    let sibling = htmlBar.querySelector('button[aria-label*="Comment"], button:nth-child(2), a:nth-child(2)') as HTMLElement;
+    if (!sibling) {
+      sibling = htmlBar.querySelector('button, a') as HTMLElement;
+    }
+    if (!sibling) {
+      return;
+    }
+
+    const siblingClasses = sibling.className;
+
+    // Parse the inner classes
+    const siblingSpan = sibling.querySelector('span');
+    const spanClasses = siblingSpan ? siblingSpan.className : '';
+
+    const siblingTextDiv = siblingSpan ? siblingSpan.querySelector('div') : null;
+    const textDivClasses = siblingTextDiv ? siblingTextDiv.className : '';
+
+    const siblingTextSpan = siblingSpan ? siblingSpan.querySelector('span:not(:first-child), div span') : null;
+    const textSpanClasses = siblingTextSpan ? siblingTextSpan.className : '';
+
+    const classesInfo = {
+      spanClasses,
+      textDivClasses,
+      textSpanClasses
+    };
+
+    // Create action bar copy button
+    const copyBtn = document.createElement('button');
+    copyBtn.type = 'button';
+    
+    // Copy all classes from sibling so it matches LinkedIn's styling exactly
+    if (siblingClasses) {
+      copyBtn.className = siblingClasses + ' linkgenie-action-bar-copy-btn';
+    } else {
+      copyBtn.className = 'artdeco-button artdeco-button--muted artdeco-button--4 artdeco-button--tertiary react-button__trigger linkgenie-action-bar-copy-btn';
+    }
+    
+    copyBtn.setAttribute('aria-label', 'Copy post content');
+    copyBtn.innerHTML = buildButtonContent('Copy Post', false, classesInfo);
+
+    copyBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Find the parent post container
+      const postCard = htmlBar.closest('.feed-shared-update-v2') || 
+                       htmlBar.closest('[role="listitem"]') || 
+                       htmlBar.closest('.feed-shared-update') ||
+                       htmlBar.closest('.feed-shared-update-v4') ||
+                       htmlBar.closest('article') ||
+                       htmlBar.parentElement; // fallback to parent
+
+      if (!postCard) {
+        console.warn('LinkGenie: Could not find parent post card container.');
         return;
       }
 
-      // Create action bar copy button
-      const copyBtn = document.createElement('button');
-      copyBtn.type = 'button';
-      copyBtn.className = 'artdeco-button artdeco-button--muted artdeco-button--4 artdeco-button--tertiary react-button__trigger linkgenie-action-bar-copy-btn';
-      copyBtn.setAttribute('aria-label', 'Copy post content');
-      copyBtn.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="linkgenie-copy-icon">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-        </svg>
-        <span class="artdeco-button__text">Copy Post</span>
-      `;
+      // Find description elements
+      const descriptionSelectors = [
+        '.feed-shared-inline-show-more-text',
+        '.expandable-text-box',
+        '.feed-shared-update-v2__description-text',
+        '.update-components-text',
+        '.feed-shared-update-v2__commentary',
+        '.update-components-update-v2__commentary',
+        '.feed-shared-text'
+      ];
 
-      copyBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        // Find the parent post container
-        const postCard = htmlBar.closest('.feed-shared-update-v2') || 
-                         htmlBar.closest('[role="listitem"]') || 
-                         htmlBar.closest('.feed-shared-update') ||
-                         htmlBar.closest('.feed-shared-update-v4') ||
-                         htmlBar.closest('article') ||
-                         htmlBar.parentElement; // fallback to parent
-
-        if (!postCard) {
-          console.warn('LinkGenie: Could not find parent post card container.');
-          return;
-        }
-
-        // Find description elements
-        const descriptionSelectors = [
-          '.feed-shared-inline-show-more-text',
-          '.expandable-text-box',
-          '.feed-shared-update-v2__description-text',
-          '.update-components-text',
-          '.feed-shared-update-v2__commentary',
-          '.update-components-update-v2__commentary',
-          '.feed-shared-text'
-        ];
-
-        let descriptionEl: HTMLElement | null = null;
-        for (const descSel of descriptionSelectors) {
-          const found = postCard.querySelector(descSel);
-          if (found) {
-            if (
-              !found.closest('.comments-comment-item') &&
-              !found.closest('.comment-item') &&
-              !found.className.toLowerCase().includes('comment')
-            ) {
-              descriptionEl = found as HTMLElement;
-              break;
-            }
+      let descriptionEl: HTMLElement | null = null;
+      for (const descSel of descriptionSelectors) {
+        const found = postCard.querySelector(descSel);
+        if (found) {
+          if (
+            !found.closest('.comments-comment-item') &&
+            !found.closest('.comment-item') &&
+            !found.className.toLowerCase().includes('comment')
+          ) {
+            descriptionEl = found as HTMLElement;
+            break;
           }
         }
+      }
 
-        if (descriptionEl) {
-          const clone = descriptionEl.cloneNode(true) as HTMLElement;
-          
-          // Remove injected elements
-          const btnToRemove = clone.querySelector('.linkgenie-copy-btn');
-          if (btnToRemove) {
-            btnToRemove.remove();
+      if (descriptionEl) {
+        const clone = descriptionEl.cloneNode(true) as HTMLElement;
+        
+        // Remove injected elements
+        const btnToRemove = clone.querySelector('.linkgenie-copy-btn');
+        if (btnToRemove) {
+          btnToRemove.remove();
+        }
+        const seeMoreElements = clone.querySelectorAll('.feed-shared-inline-show-more-text__see-more-less-toggle, .see-more, button');
+        seeMoreElements.forEach(el => el.remove());
+
+        let text = (clone.textContent || '').trim();
+        text = text.replace(/\bsee\s+more\b/gi, '').trim();
+        text = text.replace(/\bsee\s+translation\b/gi, '').trim();
+
+        navigator.clipboard.writeText(text).then(() => {
+          copyBtn.classList.add('success');
+          copyBtn.innerHTML = buildButtonContent('Copied!', true, classesInfo);
+
+          setTimeout(() => {
+            copyBtn.classList.remove('success');
+            copyBtn.innerHTML = buildButtonContent('Copy Post', false, classesInfo);
+          }, 1500);
+        }).catch((err) => {
+          console.error('LinkGenie: Failed to copy text:', err);
+        });
+      } else {
+        // fallback if no description selector matched: search for any paragraph inside the postcard
+        const paragraphs = postCard.querySelectorAll('p, span');
+        let text = '';
+        for (const p of paragraphs) {
+          const txt = (p.textContent || '').trim();
+          if (txt.length > 50 && !txt.includes('reactions') && !txt.includes('Comment') && !txt.includes('Repost')) {
+            text = txt;
+            break;
           }
-          const seeMoreElements = clone.querySelectorAll('.feed-shared-inline-show-more-text__see-more-less-toggle, .see-more, button');
-          seeMoreElements.forEach(el => el.remove());
-
-          let text = (clone.textContent || '').trim();
-          text = text.replace(/\bsee\s+more\b/gi, '').trim();
-          text = text.replace(/\bsee\s+translation\b/gi, '').trim();
-
+        }
+        if (text) {
           navigator.clipboard.writeText(text).then(() => {
             copyBtn.classList.add('success');
-            copyBtn.innerHTML = `
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="linkgenie-copy-icon">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span class="artdeco-button__text">Copied!</span>
-            `;
-
+            copyBtn.innerHTML = buildButtonContent('Copied!', true, classesInfo);
             setTimeout(() => {
               copyBtn.classList.remove('success');
-              copyBtn.innerHTML = `
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="linkgenie-copy-icon">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
-                <span class="artdeco-button__text">Copy Post</span>
-              `;
+              copyBtn.innerHTML = buildButtonContent('Copy Post', false, classesInfo);
             }, 1500);
           }).catch((err) => {
-            console.error('LinkGenie: Failed to copy text:', err);
+            console.error('LinkGenie: Failed fallback copy:', err);
           });
         } else {
-          // fallback if no description selector matched: search for any paragraph inside the postcard
-          const paragraphs = postCard.querySelectorAll('p, span');
-          let text = '';
-          for (const p of paragraphs) {
-            const txt = (p.textContent || '').trim();
-            if (txt.length > 50 && !txt.includes('reactions') && !txt.includes('Comment') && !txt.includes('Repost')) {
-              text = txt;
-              break;
-            }
-          }
-          if (text) {
-            navigator.clipboard.writeText(text).then(() => {
-              copyBtn.classList.add('success');
-              copyBtn.innerHTML = `
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="linkgenie-copy-icon">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span class="artdeco-button__text">Copied!</span>
-              `;
-              setTimeout(() => {
-                copyBtn.classList.remove('success');
-                copyBtn.innerHTML = `
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="linkgenie-copy-icon">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                  </svg>
-                  <span class="artdeco-button__text">Copy Post</span>
-                `;
-              }, 1500);
-            }).catch((err) => {
-              console.error('LinkGenie: Failed fallback copy:', err);
-            });
-          } else {
-            copyBtn.innerHTML = `
-              <span class="artdeco-button__text">No text found</span>
-            `;
-            setTimeout(() => {
-              copyBtn.innerHTML = `
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="linkgenie-copy-icon">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
-                <span class="artdeco-button__text">Copy Post</span>
-              `;
-            }, 1500);
-          }
+          copyBtn.innerHTML = buildButtonContent('No text found', false, classesInfo);
+          setTimeout(() => {
+            copyBtn.innerHTML = buildButtonContent('Copy Post', false, classesInfo);
+          }, 1500);
         }
-      });
-
-      // Append to the action bar
-      htmlBar.appendChild(copyBtn);
-      htmlBar.setAttribute('data-lg-copy-bar-injected', 'true');
-      console.log('AI Reply Extension: Injected "Copy Post" button into social action bar.');
+      }
     });
+
+    // Append to the action bar
+    htmlBar.appendChild(copyBtn);
+    htmlBar.setAttribute('data-lg-copy-bar-injected', 'true');
+    console.log('AI Reply Extension: Injected "Copy Post" button into social action bar.');
   });
 
   // 2. Inject AI Reply buttons next to editors
