@@ -107,7 +107,7 @@ ${cleanPostText.substring(0, 3000)}`;
               contents: [{ role: 'user', parts: [{ text: prompt }] }],
               systemInstruction: { parts: [{ text: systemInstruction }] },
               generationConfig: {
-                maxOutputTokens: 500,
+                maxOutputTokens: 2048,
                 temperature: 0.7
               }
             })
@@ -142,7 +142,7 @@ ${cleanPostText.substring(0, 3000)}`;
                 { role: 'system', content: systemInstruction },
                 { role: 'user', content: prompt }
               ],
-              max_tokens: 500,
+              max_tokens: 2048,
               temperature: 0.7
             })
           });
@@ -174,7 +174,7 @@ ${cleanPostText.substring(0, 3000)}`;
             },
             body: JSON.stringify({
               model: modelName,
-              max_tokens: 500,
+              max_tokens: 2048,
               temperature: 0.7,
               system: systemInstruction,
               messages: [
