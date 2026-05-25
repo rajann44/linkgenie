@@ -5,3 +5,6 @@ extension/node_modules/
 # OS specific files
 .DS_Store
 Thumbs.db
+
+# Build packages
+*.zip
