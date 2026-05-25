@@ -111,7 +111,7 @@ LinkGenie is 100% serverless. We do not operate any backend servers. Your settin
 `[YOUR_PUBLISHER_NAME]`
 
 **Contact Email** [REQUIRED]
-`[YOUR_EMAIL]`
+`rajan.chaudhary@web.de`
 
 **Support URL / Email** [RECOMMENDED]
 `https://github.com/[YOUR_USERNAME]/[YOUR_REPO]/issues` (Alternatively: `https://[YOUR-VERCEL-DOMAIN].vercel.app/#support`)
