@@ -1039,9 +1039,8 @@ function findActionBars(): HTMLElement[] {
   });
   
   // 2. Try SVG-based resolution (helps with obfuscated/dynamic class structures)
+  // We exclude thumbs-up to avoid selecting separate reaction wrapper containers
   const svgIds = [
-    '#thumbs-up-outline-small',
-    '#thumbs-up-outline-medium',
     '#comment-small',
     '#comment-medium',
     '#repost-small',
@@ -1058,7 +1057,11 @@ function findActionBars(): HTMLElement[] {
     });
   });
   
-  return Array.from(bars);
+  const resolvedBars = Array.from(bars);
+  // Filter out any nested sub-containers to ensure we only target the main outer action row
+  return resolvedBars.filter(bar => {
+    return !resolvedBars.some(otherBar => otherBar !== bar && otherBar.contains(bar));
+  });
 }
 
 /**
@@ -1248,13 +1251,30 @@ function scanAndInject() {
       e.preventDefault();
       e.stopPropagation();
 
-      // Find the parent post container
-      const postCard = htmlBar.closest('.feed-shared-update-v2') || 
-                       htmlBar.closest('[role="listitem"]') || 
-                       htmlBar.closest('.feed-shared-update') ||
-                       htmlBar.closest('.feed-shared-update-v4') ||
-                       htmlBar.closest('article') ||
-                       htmlBar.parentElement; // fallback to parent
+      // Find the parent post container by climbing up to the first outer card structure
+      let postCard: HTMLElement | null = htmlBar;
+      while (postCard && postCard !== document.body) {
+        // Stop if this element contains a description element (meaning it's the post container or above)
+        const hasDesc = postCard.querySelector('.expandable-text-box, .feed-shared-inline-show-more-text, .feed-shared-update-v2__description-text');
+        if (hasDesc) {
+          break;
+        }
+        if (
+          postCard.classList.contains('feed-shared-update-v2') ||
+          postCard.getAttribute('role') === 'listitem' ||
+          postCard.tagName.toLowerCase() === 'article' ||
+          postCard.classList.contains('feed-shared-update') ||
+          (postCard.getAttribute('componentkey') && postCard.getAttribute('componentkey')!.includes('FeedType')) ||
+          postCard.className.includes('feed-shared-') ||
+          postCard.className.includes('update-v2')
+        ) {
+          break;
+        }
+        postCard = postCard.parentElement;
+      }
+      if (!postCard) {
+        postCard = htmlBar.parentElement; // fallback to parent
+      }
 
       if (!postCard) {
         console.warn('LinkGenie: Could not find parent post card container.');
@@ -1274,16 +1294,28 @@ function scanAndInject() {
 
       let descriptionEl: HTMLElement | null = null;
       for (const descSel of descriptionSelectors) {
-        const found = postCard.querySelector(descSel);
-        if (found) {
-          if (
-            !found.closest('.comments-comment-item') &&
-            !found.closest('.comment-item') &&
-            !found.className.toLowerCase().includes('comment')
-          ) {
-            descriptionEl = found as HTMLElement;
+        const foundElements = postCard.querySelectorAll(descSel);
+        for (const found of foundElements) {
+          const htmlFound = found as HTMLElement;
+          
+          // Ensure it's not inside a comment, nor inside the post header/actor/profile block (to avoid copying job title)
+          const isComment = htmlFound.closest('.comments-comment-item') || 
+                            htmlFound.closest('.comment-item') || 
+                            htmlFound.className.toLowerCase().includes('comment');
+                            
+          const isHeader = htmlFound.closest('.update-components-actor') || 
+                           htmlFound.closest('.feed-shared-actor') || 
+                           htmlFound.closest('[class*="actor"]') || 
+                           htmlFound.closest('[class*="header"]') ||
+                           htmlFound.closest('[class*="profile"]');
+                           
+          if (!isComment && !isHeader) {
+            descriptionEl = htmlFound;
             break;
           }
+        }
+        if (descriptionEl) {
+          break;
         }
       }
 
@@ -1318,7 +1350,16 @@ function scanAndInject() {
         const paragraphs = postCard.querySelectorAll('p, span');
         let text = '';
         for (const p of paragraphs) {
-          const txt = (p.textContent || '').trim();
+          const htmlP = p as HTMLElement;
+          const isHeader = htmlP.closest('.update-components-actor') || 
+                           htmlP.closest('.feed-shared-actor') || 
+                           htmlP.closest('[class*="actor"]') || 
+                           htmlP.closest('[class*="header"]') ||
+                           htmlP.closest('[class*="profile"]');
+                           
+          if (isHeader) continue;
+
+          const txt = (htmlP.textContent || '').trim();
           if (txt.length > 50 && !txt.includes('reactions') && !txt.includes('Comment') && !txt.includes('Repost')) {
             text = txt;
             break;
