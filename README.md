@@ -1,13 +1,32 @@
+<div align="center">
+
+<img src="extension/icons/icon128.png" alt="LinkGenie Logo" width="96" height="96" />
+
 # LinkGenie 🧞‍♂️
 
-> **Privacy-first, serverless AI assistant that drafts context-aware LinkedIn replies inline — directly in your feed.**
+**Privacy-first, serverless AI assistant that drafts context-aware LinkedIn replies inline — directly in your feed.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/rajann44/linkgenie/releases/tag/v1.0.0)
-[![Open Source](https://img.shields.io/badge/Open%20Source-%E2%9C%93-brightgreen.svg)](https://github.com/rajann44/linkgenie)
-[![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-orange.svg)](https://developer.chrome.com/docs/extensions/)
+<br/>
 
-LinkGenie is a 100% serverless Chrome Extension (Manifest V3) that communicates **directly with LLM API endpoints from your browser** — no backend server, no tracking, no external databases.
+[![Available on Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Available-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)](https://chromewebstore.google.com/detail/linkgenie/gmcfeelffpkcnkllliimpkdpfiijigfh)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge)](https://github.com/rajann44/linkgenie/releases/tag/v1.0.0)
+[![Open Source](https://img.shields.io/badge/Open%20Source-MIT-brightgreen?style=for-the-badge&logo=github)](https://github.com/rajann44/linkgenie)
+
+<br/>
+
+<a href="https://chromewebstore.google.com/detail/linkgenie/gmcfeelffpkcnkllliimpkdpfiijigfh">
+  <img src="https://img.shields.io/badge/Install%20on-Chrome%20Web%20Store-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white&labelColor=1a1a2e" alt="Install on Chrome Web Store" height="48" />
+</a>
+
+<sub>🔍 Extension ID: <code>gmcfeelffpkcnkllliimpkdpfiijigfh</code> &nbsp;·&nbsp; Verified & published by Google Chrome Web Store review</sub>
+
+</div>
+
+---
+
+LinkGenie is a 100% serverless Chrome Extension (Manifest V3) that communicates **directly with LLM API endpoints from your browser** — no backend server, no tracking, no external databases. Reviewed and published on the **Chrome Web Store**.
+
 
 ---
 
@@ -42,7 +61,15 @@ LinkGenie is a 100% serverless Chrome Extension (Manifest V3) that communicates 
 
 ## Installation & Setup
 
-### Option A: Install Pre-built Release (Recommended)
+### ✅ Option A: Install from Chrome Web Store (Easiest)
+
+Click the badge below or visit the Chrome Web Store listing directly:
+
+**[→ Install LinkGenie from the Chrome Web Store](https://chromewebstore.google.com/detail/linkgenie/gmcfeelffpkcnkllliimpkdpfiijigfh)**
+
+No manual ZIP extraction required — one click and you're ready.
+
+### Option B: Install Pre-built Release (Manual)
 1. Download the latest release package (`linkgenie-v1.0.0.zip`) from [GitHub Releases](https://github.com/rajann44/linkgenie/releases).
 2. Unzip the downloaded file to a directory on your computer.
 3. Open Google Chrome and navigate to `chrome://extensions/`.
@@ -50,7 +77,7 @@ LinkGenie is a 100% serverless Chrome Extension (Manifest V3) that communicates 
 5. Click the **Load unpacked** button in the top-left.
 6. Select the folder where you extracted the release ZIP.
 
-### Option B: Build from Source (For Developers)
+### Option C: Build from Source (For Developers)
 1. Ensure you have [Node.js](https://nodejs.org/) installed.
 2. Clone the repository and build the project:
    ```bash
