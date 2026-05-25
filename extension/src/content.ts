@@ -917,31 +917,34 @@ function injectCopyButtons() {
 
     // Create the Copy Button
     const copyBtn = document.createElement('button');
-    copyBtn.className = 'linkedin-post-copy-button';
+    copyBtn.className = 'artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--1 artdeco-button--tertiary linkedin-post-copy-button';
     copyBtn.type = 'button';
     copyBtn.title = 'Copy post text';
     copyBtn.innerHTML = COPY_ICON_SVG;
 
     // Match LinkedIn's native button style rules (subtle, rounded, small)
     copyBtn.style.cssText = `
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 6px;
       margin-right: 4px;
-      border-radius: 50%;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      vertical-align: middle;
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      min-height: 32px;
+      padding: 0;
+      background: transparent;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
       color: rgba(0, 0, 0, 0.6);
       transition: background-color 0.15s, color 0.15s;
-      vertical-align: middle;
-      outline: none;
     `;
 
     // Add interactive hover states
     copyBtn.addEventListener('mouseenter', () => {
-      copyBtn.style.backgroundColor = 'rgba(0, 0, 0, 0.06)';
+      copyBtn.style.backgroundColor = 'rgba(0, 0, 0, 0.08)';
       copyBtn.style.color = 'rgba(0, 0, 0, 0.9)';
     });
 

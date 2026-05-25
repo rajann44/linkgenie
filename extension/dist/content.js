@@ -500,18 +500,21 @@
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#05b03d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
     <polyline points="20 6 9 17 4 12"></polyline>
   </svg>
-`;function S(){document.querySelectorAll('p[componentkey^="feed-commentary"]').forEach(o=>{let e=o,t=e.closest("article")||e.closest("[data-urn]")||e.closest(".feed-shared-update-v2")||e.parentElement?.closest("div");if(!t||t.getAttribute("data-copy-injected")==="true")return;let a=t.querySelector('button[aria-label^="Open control menu"]');if(!a)return;let i=a.parentElement;if(!i)return;t.setAttribute("data-copy-injected","true");let r=document.createElement("button");r.className="linkedin-post-copy-button",r.type="button",r.title="Copy post text",r.innerHTML=y,r.style.cssText=`
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 6px;
+`;function S(){document.querySelectorAll('p[componentkey^="feed-commentary"]').forEach(o=>{let e=o,t=e.closest("article")||e.closest("[data-urn]")||e.closest(".feed-shared-update-v2")||e.parentElement?.closest("div");if(!t||t.getAttribute("data-copy-injected")==="true")return;let a=t.querySelector('button[aria-label^="Open control menu"]');if(!a)return;let i=a.parentElement;if(!i)return;t.setAttribute("data-copy-injected","true");let r=document.createElement("button");r.className="artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--1 artdeco-button--tertiary linkedin-post-copy-button",r.type="button",r.title="Copy post text",r.innerHTML=y,r.style.cssText=`
       margin-right: 4px;
-      border-radius: 50%;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      vertical-align: middle;
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      min-height: 32px;
+      padding: 0;
+      background: transparent;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
       color: rgba(0, 0, 0, 0.6);
       transition: background-color 0.15s, color 0.15s;
-      vertical-align: middle;
-      outline: none;
-    `,r.addEventListener("mouseenter",()=>{r.style.backgroundColor="rgba(0, 0, 0, 0.06)",r.style.color="rgba(0, 0, 0, 0.9)"}),r.addEventListener("mouseleave",()=>{r.style.backgroundColor="transparent",r.style.color="rgba(0, 0, 0, 0.6)"}),r.addEventListener("click",async l=>{l.stopPropagation(),l.preventDefault();let s=e.innerText||"";if(s)try{await navigator.clipboard.writeText(s),r.innerHTML=H,setTimeout(()=>{r.innerHTML=y},1500)}catch(d){console.error("Failed to copy post text contents:",d)}}),i.insertBefore(r,a)})}function h(){S(),document.querySelectorAll('div[contenteditable="true"], textarea.comments-comment-textbox__textarea').forEach(o=>{let e=o;if(e.getAttribute("data-ai-reply-injected")==="true"||e.closest("#ai-reply-assistant-root")||e.classList.contains("draft-textarea"))return;let t=I(e);if(t){let s=f(e,t);t.insertBefore(s,t.firstChild),e.setAttribute("data-ai-reply-injected","true"),console.log("AI Reply Extension: Injected button into toolbar next to emoji/photo icons.");return}let a=e,i=null,r=0;for(;a&&r<6&&(i=M(a),!i);)a=a.parentElement,r++;let l=a||e;if(i&&i.parentElement){let s=f(e,l);i.parentElement.insertBefore(s,i),e.setAttribute("data-ai-reply-injected","true"),console.log("AI Reply Extension: Injected button next to submit button (class-agnostic).")}else{let s=f(e,l),d=e.parentElement;if(d){let c=document.createElement("div");c.className="ai-reply-adhoc-bar",c.style.display="inline-flex",c.style.justifyContent="flex-end",c.style.width="100%",c.style.padding="4px 0",c.appendChild(s),e.nextSibling?d.insertBefore(c,e.nextSibling):d.appendChild(c),e.setAttribute("data-ai-reply-injected","true"),console.log("AI Reply Extension: Succeeded in fallback button injection after editor.")}}})}function A(){h(),new MutationObserver(()=>{m&&clearTimeout(m),m=window.setTimeout(()=>{h()},150)}).observe(document.body,{childList:!0,subtree:!0}),console.log("AI Reply Extension: MutationObserver initialized.")}A();})();
+    `,r.addEventListener("mouseenter",()=>{r.style.backgroundColor="rgba(0, 0, 0, 0.08)",r.style.color="rgba(0, 0, 0, 0.9)"}),r.addEventListener("mouseleave",()=>{r.style.backgroundColor="transparent",r.style.color="rgba(0, 0, 0, 0.6)"}),r.addEventListener("click",async l=>{l.stopPropagation(),l.preventDefault();let s=e.innerText||"";if(s)try{await navigator.clipboard.writeText(s),r.innerHTML=H,setTimeout(()=>{r.innerHTML=y},1500)}catch(d){console.error("Failed to copy post text contents:",d)}}),i.insertBefore(r,a)})}function h(){S(),document.querySelectorAll('div[contenteditable="true"], textarea.comments-comment-textbox__textarea').forEach(o=>{let e=o;if(e.getAttribute("data-ai-reply-injected")==="true"||e.closest("#ai-reply-assistant-root")||e.classList.contains("draft-textarea"))return;let t=I(e);if(t){let s=f(e,t);t.insertBefore(s,t.firstChild),e.setAttribute("data-ai-reply-injected","true"),console.log("AI Reply Extension: Injected button into toolbar next to emoji/photo icons.");return}let a=e,i=null,r=0;for(;a&&r<6&&(i=M(a),!i);)a=a.parentElement,r++;let l=a||e;if(i&&i.parentElement){let s=f(e,l);i.parentElement.insertBefore(s,i),e.setAttribute("data-ai-reply-injected","true"),console.log("AI Reply Extension: Injected button next to submit button (class-agnostic).")}else{let s=f(e,l),d=e.parentElement;if(d){let c=document.createElement("div");c.className="ai-reply-adhoc-bar",c.style.display="inline-flex",c.style.justifyContent="flex-end",c.style.width="100%",c.style.padding="4px 0",c.appendChild(s),e.nextSibling?d.insertBefore(c,e.nextSibling):d.appendChild(c),e.setAttribute("data-ai-reply-injected","true"),console.log("AI Reply Extension: Succeeded in fallback button injection after editor.")}}})}function A(){h(),new MutationObserver(()=>{m&&clearTimeout(m),m=window.setTimeout(()=>{h()},150)}).observe(document.body,{childList:!0,subtree:!0}),console.log("AI Reply Extension: MutationObserver initialized.")}A();})();
