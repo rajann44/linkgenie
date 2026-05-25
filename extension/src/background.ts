@@ -92,9 +92,24 @@ ${cleanPostText.substring(0, 3000)}`;
       try {
         console.log(`LinkGenie: Generating reply using provider "${provider}"...`);
         let reply = '';
-
         if (provider === 'gemini') {
-          const modelName = model || 'gemini-2.5-flash';
+          let modelName = model ? model.trim() : 'gemini-2.5-flash';
+          
+          // Strip leading 'models/' if the user provided it in their custom settings
+          if (modelName.toLowerCase().startsWith('models/')) {
+            modelName = modelName.substring('models/'.length);
+          }
+          
+          // Auto-migrate retired/deprecated models to prevent 404 API errors
+          const nameLower = modelName.toLowerCase();
+          if (
+            nameLower.startsWith('gemini-1.5-flash') || 
+            nameLower.startsWith('gemini-1.0-pro') ||
+            nameLower === 'gemini-pro'
+          ) {
+            modelName = 'gemini-2.5-flash';
+          }
+
           // Use standard Google Generative Language API
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
           
