@@ -16,37 +16,45 @@ Because LinkGenie is completely serverless, **it communicates directly with LLM 
 
 ---
 
-## Quick Setup
+## Installation & Setup
 
-### 1. Build the Extension
-Ensure you have Node.js installed, then run:
+### Option A: Install Pre-built Release (Recommended)
+1. Download the latest release package (`linkgenie-v1.0.0.zip`) from the [GitHub Releases](https://github.com/rajann44/linkgenie/releases) section.
+2. Unzip the downloaded file to a directory on your computer.
+3. Open Google Chrome and navigate to `chrome://extensions/`.
+4. Enable **Developer mode** using the toggle switch in the top-right corner.
+5. Click the **Load unpacked** button in the top-left.
+6. Select the folder where you extracted the release ZIP.
 
-```bash
-# Navigate to the extension folder
-cd extension
+### Option B: Build from Source (For Developers)
+1. Ensure you have [Node.js](https://nodejs.org/) installed.
+2. Clone the repository and build the project:
+   ```bash
+   # Navigate to the extension folder
+   cd extension
 
-# Install build dependencies
-npm install
+   # Install development dependencies
+   npm install
 
-# Build the extension bundle
-npm run build
-```
-*(Run `npm run watch` if you are actively modifying the source code).*
+   # Compile the production bundle
+   npm run build
+   ```
+   *(Use `npm run watch` if you want to automatically compile code changes during active development).*
+3. Open Google Chrome and go to `chrome://extensions/`.
+4. Enable **Developer mode**.
+5. Click **Load unpacked** and select the `extension/` directory.
 
-### 2. Install in Chrome
-1. Open Google Chrome and go to `chrome://extensions/`.
-2. Enable **Developer mode** (toggle in the top-right corner).
-3. Click **Load unpacked** (top-left button).
-4. Select the `extension/` directory in this repository.
+---
 
-### 3. Configure API Keys
+## Configuration
+
 1. Click the **LinkGenie** extension icon in your Chrome toolbar to open the **Options Page**.
-2. Select your preferred **LLM Provider** (e.g., Google Gemini).
-3. Enter your **API Key**.
-4. (Optional) Customise the **Model Name** or specify a **Persona** (e.g., *"Helpful product engineer, keep it under 2 sentences"*).
+2. Select your preferred **LLM Provider** (Google Gemini, OpenAI, or Anthropic Claude).
+3. Enter your **API Key** (stored securely on your device).
+4. *(Optional)* Override the **Model Name** or configure a custom **Persona** (e.g. *"Helpful product engineer, tone: technical, keep it under 2 sentences"*).
 5. Click **Save Configuration**.
 
-Now, open LinkedIn and look for the 🧞‍♂️ **AI Reply** button under any post's comment field!
+Now, open LinkedIn, expand the comments on any post, and click the **AI Reply** button to generate contextual responses!
 
 ---
 
