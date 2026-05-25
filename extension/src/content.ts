@@ -10,30 +10,11 @@ const SELECTORS = {
   actionBar: '.comments-comment-box__actions, .comments-comment-box__form-container, .comments-comment-box__form, .comments-comment-box__editor-container',
   
   // Submit/post button container in the actions bar (for inserting nearby)
-  submitContainer: '.comments-comment-box__submit-button-container, .comments-comment-box__post-button',
-
-  // Parents representing the update/post card
-  postCard: 'div.feed-shared-update-v2, div[data-urn], article, .feed-shared-update, .occludable-update, .feed-shared-update-v2__comments-container',
-  
-  // Selectors for finding post content text inside a post card
-  postText: [
-    'p[componentkey*="feed-commentary"]',
-    '[componentkey*="commentary"]',
-    '[class*="commentary"]',
-    '.feed-shared-update-v2__description-text',
-    '.update-components-text',
-    '.feed-shared-text',
-    '[class*="description-text"]',
-    '[class*="update-components-text"]',
-    '.feed-shared-update-v2__commentary',
-    '.feed-shared-update-v2__commentary-wrapper',
-    '.feed-shared-inline-show-more-text'
-  ]
+  submitContainer: '.comments-comment-box__submit-button-container, .comments-comment-box__post-button'
 };
 
 // State variables for currently active composer
 let activeEditor: HTMLElement | null = null;
-let activePostText = '';
 let currentTone = 'professional';
 let currentLength = 'short';
 let activeContainer: HTMLElement | null = null;
@@ -48,323 +29,7 @@ let isGenerating = false;
 /**
  * Traverses up from a comment composer to find the parent post text content.
  */
-/**
- * Helper to determine if an element resides inside a comment box, thread list, or reply node.
- * This checks obfuscated componentkeys, data-testids, and standard class naming patterns.
- */
-function isInsideCommentSection(el: HTMLElement, stopAt?: HTMLElement): boolean {
-  let curr: HTMLElement | null = el;
-  while (curr) {
-    if (stopAt && curr === stopAt) {
-      break;
-    }
-    const compKey = (curr.getAttribute('componentkey') || '').toLowerCase();
-    const testId = (curr.getAttribute('data-testid') || '').toLowerCase();
-    const className = (curr.className || '').toLowerCase();
-    
-    // Ignore elements or parents that are part of the main post commentary description
-    if (
-      compKey.includes('commentary') ||
-      className.includes('commentary')
-    ) {
-      curr = curr.parentElement;
-      continue;
-    }
 
-    if (
-      compKey.includes('comment-') ||
-      compKey.includes('replaceablecomment_') ||
-      compKey.includes('commentlist') ||
-      compKey.includes('commentbox') ||
-      testId.includes('comment') ||
-      (className.includes('comment') && !className.includes('commentary'))
-    ) {
-      return true;
-    }
-    curr = curr.parentElement;
-  }
-  return false;
-}
-
-/**
- * Traverses up from a comment composer to find the parent post text content.
- */
-/**
- * Fast-path: Climbs up from the editor to find the closest ancestor containing a post description element
- * that is not nested inside any comments container.
- */
-function findDescriptionByClimbing(editor: HTMLElement): string {
-  let temp: HTMLElement | null = editor;
-  const descriptionSelectors = [
-    '.expandable-text-box',
-    '.feed-shared-inline-show-more-text',
-    'p[componentkey*="feed-commentary"]',
-    '[class*="commentary"]',
-    '.feed-shared-update-v2__description-text',
-    '.update-components-text'
-  ];
-
-  while (temp) {
-    if (temp.tagName === 'BODY' || temp.tagName === 'HTML') break;
-
-    // Check if the current ancestor contains any known description element
-    for (const selector of descriptionSelectors) {
-      const descEl = temp.querySelector(selector) as HTMLElement;
-      if (descEl) {
-        // Verify that this description element is not inside a comments container or a comment item
-        let isDescInsideComments = false;
-        let currParent: HTMLElement | null = descEl;
-        while (currParent && currParent !== temp) {
-          const parentClassName = (currParent.className || '').toLowerCase();
-          const parentCompKey = (currParent.getAttribute('componentkey') || '').toLowerCase();
-          
-          if (
-            (parentClassName.includes('comment') && !parentClassName.includes('commentary')) ||
-            (parentCompKey.includes('comment') && !parentCompKey.includes('commentary')) ||
-            currParent.closest('.comments-comment-item') ||
-            currParent.closest('.comment-item')
-          ) {
-            isDescInsideComments = true;
-            break;
-          }
-          currParent = currParent.parentElement;
-        }
-
-        if (!isDescInsideComments) {
-          let text = (descEl.textContent || '').trim();
-          // Clean "see more" link text
-          text = text.replace(/\bsee\s+more\b/gi, '').trim();
-          if (text.length > 10) {
-            console.log(`AI Reply Extension: Found post text via climbing fast-path selector "${selector}":`, text);
-            return text;
-          }
-        }
-      }
-    }
-
-    // Stop climbing if we hit a post card boundary to avoid matching other posts in the feed
-    const role = temp.getAttribute('role') || '';
-    const compKey = temp.getAttribute('componentkey') || '';
-    if (
-      temp.tagName === 'ARTICLE' ||
-      temp.hasAttribute('data-urn') ||
-      role === 'listitem' ||
-      compKey.includes('FeedType_MAIN_FEED') ||
-      temp.classList.contains('feed-shared-update-v2') ||
-      temp.classList.contains('occludable-update') ||
-      temp.classList.contains('feed-shared-update')
-    ) {
-      break;
-    }
-
-    temp = temp.parentElement;
-  }
-  return '';
-}
-
-/**
- * Traverses up from a comment composer to find the parent post text content.
- */
-function extractPostText(editor: HTMLElement): string {
-  // 1. Try climbing fast-path first
-  const fastPathText = findDescriptionByClimbing(editor);
-  if (fastPathText) {
-    return fastPathText;
-  }
-
-  console.log('AI Reply Extension: Fast-path failed. Falling back to structured climbers...');
-
-  // 2. Find the parent post card, bypassing nested comment items and comments containers
-  let current: HTMLElement | null = editor;
-  let postCardElement: HTMLElement | null = null;
-  while (current) {
-    const role = current.getAttribute('role') || '';
-    const compKey = current.getAttribute('componentkey') || '';
-    const className = (current.className || '').toLowerCase();
-    
-    // Check if the current element belongs to a comment item so we keep climbing
-    const isComment = current.classList.contains('comments-comment-item') ||
-                      current.classList.contains('comment-item') ||
-                      current.closest('.comments-comment-item') ||
-                      current.closest('.comment-item') ||
-                      (current.getAttribute('data-id') || '').startsWith('comment-');
-
-    // Also check if the current element is a comments section container itself
-    const isCommentSection = className.includes('comment') && !className.includes('commentary');
-
-    if (!isComment && !isCommentSection) {
-      if (
-        current.tagName === 'ARTICLE' ||
-        current.hasAttribute('data-urn') ||
-        role === 'listitem' ||
-        compKey.includes('FeedType_MAIN_FEED') ||
-        current.classList.contains('feed-shared-update-v2') ||
-        current.classList.contains('occludable-update') ||
-        current.classList.contains('feed-shared-update')
-      ) {
-        postCardElement = current;
-        break;
-      }
-    }
-    current = current.parentElement;
-  }
-
-  // Fallback if no container card is found
-  if (!postCardElement) {
-    let temp = editor;
-    for (let i = 0; i < 16; i++) {
-      if (temp.parentElement) temp = temp.parentElement;
-    }
-    postCardElement = temp;
-  }
-
-  if (!postCardElement) {
-    console.warn('AI Reply Extension: Could not resolve parent post card.');
-    return '';
-  }
-
-  console.log('AI Reply Extension: Found post card container:', postCardElement.tagName, postCardElement.className);
-
-  // Find the comments section container (the child of postCardElement that contains the editor)
-  let commentsContainer: HTMLElement | null = null;
-  let curr = editor;
-  while (curr && curr.parentElement && curr.parentElement !== postCardElement) {
-    curr = curr.parentElement;
-  }
-  if (curr && curr.parentElement === postCardElement) {
-    commentsContainer = curr;
-  }
-
-  // Find the header container (specifically actors/headers)
-  let headerContainer: HTMLElement | null = null;
-  const actorContainer = postCardElement.querySelector('.feed-shared-actor, .update-components-actor, [class*="actor"], [class*="header"]');
-  if (actorContainer) {
-    headerContainer = actorContainer as HTMLElement;
-  } else {
-    // Only resolve via profile link if it is inside an actor/header container
-    const profileLink = postCardElement.querySelector('a[href*="/in/"], a[href*="/company/"]');
-    if (profileLink) {
-      const linkParent = profileLink.closest('.feed-shared-actor, .update-components-actor, [class*="actor"], [class*="header"]');
-      if (linkParent) {
-        headerContainer = linkParent as HTMLElement;
-      } else {
-        // Last resort: climb up but limit it so it doesn't resolve to description wrapper
-        let currHeader = profileLink as HTMLElement;
-        let depth = 0;
-        while (currHeader && currHeader.parentElement && currHeader.parentElement !== postCardElement && depth < 4) {
-          currHeader = currHeader.parentElement;
-          depth++;
-        }
-        if (currHeader && currHeader.parentElement === postCardElement) {
-          headerContainer = currHeader;
-        }
-      }
-    }
-  }
-
-  // 3. Try to query known selectors FIRST (explicitly checking .expandable-text-box)
-  const knownSelectors = [
-    '.expandable-text-box',
-    '.feed-shared-inline-show-more-text',
-    'p[componentkey*="feed-commentary"]',
-    '[class*="commentary"]'
-  ];
-
-  for (const selector of knownSelectors) {
-    const el = postCardElement.querySelector(selector) as HTMLElement;
-    if (el) {
-      // Make sure it's not inside comments
-      const insideComments = commentsContainer && commentsContainer.contains(el);
-      // Only check insideHeader if selector is not the description itself (.expandable-text-box is never header)
-      const insideHeader = (selector !== '.expandable-text-box') && headerContainer && headerContainer.contains(el);
-      
-      if (!insideComments && !insideHeader) {
-        let text = (el.textContent || '').trim();
-        text = text.replace(/\bsee\s+more\b/gi, '').trim();
-        if (text.length > 15) {
-          console.log(`AI Reply Extension: Found post text via primary selector "${selector}":`, text);
-          return text;
-        }
-      }
-    }
-  }
-
-  // 4. Fallback to class-agnostic scanner if known selectors fail
-  console.log('AI Reply Extension: Primary selectors failed. Falling back to class-agnostic scanner...');
-  const paragraphs = postCardElement.querySelectorAll('p, span');
-  const validSegments: string[] = [];
-
-  paragraphs.forEach((p) => {
-    const el = p as HTMLElement;
-
-    // Skip if it's inside the comments container
-    if (commentsContainer && commentsContainer.contains(el)) {
-      return;
-    }
-
-    // Skip if it's inside the header container
-    if (headerContainer && headerContainer.contains(el)) {
-      return;
-    }
-
-    // Skip if it is a link to a profile/company itself
-    if (el.closest('a[href*="/in/"], a[href*="/company/"]')) {
-      return;
-    }
-
-    // Skip if it's inside our own assistant root
-    if (el.closest('#ai-reply-assistant-root')) {
-      return;
-    }
-
-    // Skip if it's the editor itself
-    if (el.closest('div[contenteditable="true"]') || el.tagName === 'TEXTAREA') {
-      return;
-    }
-
-    // Skip social action sections
-    if (
-      el.closest('[class*="social-"]') ||
-      el.closest('[class*="action-bar"]') ||
-      el.closest('[class*="footer"]') ||
-      el.closest('.feed-shared-social-action-bar') ||
-      el.closest('.feed-shared-social-counts')
-    ) {
-      return;
-    }
-
-    let text = (el.textContent || '').trim();
-    
-    // Clean "see more" link text if appended
-    text = text.replace(/\bsee\s+more\b/gi, '').trim();
-
-    // Skip social action text or numbers
-    const lowerText = text.toLowerCase();
-    if (
-      text.length > 10 &&
-      !lowerText.includes('like') &&
-      !lowerText.includes('comment') &&
-      !lowerText.includes('repost') &&
-      !lowerText.includes('send') &&
-      !/^\d+$/.test(text) &&
-      !lowerText.includes('reactions')
-    ) {
-      // Prevent duplicates (e.g. if we matched both a parent p and an inner span)
-      const dupIndex = validSegments.findIndex(existing => existing.includes(text) || text.includes(existing));
-      if (dupIndex !== -1) {
-        if (text.length > validSegments[dupIndex].length) {
-          validSegments[dupIndex] = text;
-        }
-      } else {
-        validSegments.push(text);
-      }
-    }
-  });
-
-  const finalPostText = validSegments.join('\n\n').trim();
-  console.log('AI Reply Extension: Scraped Post Content (Final):', finalPostText);
-  return finalPostText;
-}
 
 /**
  * Safe text injection into React-controlled contenteditable element.
@@ -528,53 +193,38 @@ function ensureShadowRoot(): ShadowRoot {
       overflow-y: auto;
     }
 
-    /* Post Preview Container */
-    .post-preview-container {
-      background: rgba(0, 0, 0, 0.02);
-      border: 1px solid rgba(0, 0, 0, 0.08);
+    /* Post Content Textarea */
+    .post-textarea {
+      width: 100%;
+      height: 120px;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.15);
       border-radius: 8px;
-      padding: 12px;
+      padding: 16px;
+      color: rgba(0, 0, 0, 0.9);
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 1.5;
+      resize: vertical;
+      box-sizing: border-box;
+      transition: border-color 0.16s ease-in-out;
     }
 
-    .backdrop.dark .post-preview-container {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+    .backdrop.dark .post-textarea {
+      background: #151a1e;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.9);
     }
 
-    .post-preview-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      font-weight: 600;
-      color: rgba(0, 0, 0, 0.6);
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-      cursor: pointer;
-      user-select: none;
+    .post-textarea:focus {
+      outline: none;
+      border-color: #0a66c2;
+      box-shadow: 0 0 0 1px #0a66c2;
     }
 
-    .backdrop.dark .post-preview-header {
-      color: rgba(255, 255, 255, 0.6);
-    }
-
-    .post-preview-body {
-      font-size: 14px;
-      line-height: 1.42;
-      color: rgba(0, 0, 0, 0.7);
-      max-height: 70px;
-      overflow-y: auto;
-      margin-top: 8px;
-      display: block;
-      white-space: pre-wrap;
-    }
-
-    .backdrop.dark .post-preview-body {
-      color: rgba(255, 255, 255, 0.7);
-    }
-
-    .post-preview-body.collapsed {
-      display: none;
+    .backdrop.dark .post-textarea:focus {
+      border-color: #ffffff;
+      box-shadow: 0 0 0 1px #ffffff;
     }
 
     /* Option controls */
@@ -880,13 +530,10 @@ function ensureShadowRoot(): ShadowRoot {
       </div>
       <div class="modal-body">
         
-        <!-- Post Preview Container -->
-        <div class="post-preview-container">
-          <div class="post-preview-header" id="togglePreview">
-            <span>Post Context Preview</span>
-            <span id="previewArrow">▼</span>
-          </div>
-          <div class="post-preview-body" id="postPreviewBody">Loading post text...</div>
+        <!-- Post Content Input Box -->
+        <div class="control-group">
+          <div class="control-label">LinkedIn Post Content</div>
+          <textarea class="post-textarea" id="postContentInput" placeholder="Paste the LinkedIn post content here..."></textarea>
         </div>
 
         <!-- Tone and Length selectors -->
@@ -916,7 +563,7 @@ function ensureShadowRoot(): ShadowRoot {
             <div class="loading-text">Crafting reply draft...</div>
           </div>
           <div class="control-label">Generated Draft (Editable)</div>
-          <textarea class="draft-textarea" id="draftTextarea" placeholder="No draft generated yet. Click generate or choose settings..."></textarea>
+          <textarea class="draft-textarea" id="draftTextarea" placeholder="No draft generated yet. Paste post content and click Generate Draft..."></textarea>
         </div>
 
         <!-- Error displays -->
@@ -925,12 +572,7 @@ function ensureShadowRoot(): ShadowRoot {
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
-        <button class="btn btn-secondary" id="regenerateBtn">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="fill: currentColor;">
-            <path d="M10.15 2.15C9.07 1.07 7.62 0.44 6 0.44C2.93 0.44 0.44 2.93 0.44 6C0.44 9.07 2.93 11.56 6 11.56C8.54 11.56 10.68 9.85 11.35 7.56H9.72C9.12 8.97 7.68 10 6 10C3.79 10 2 8.21 2 6C2 3.79 3.79 2 6 2C7.1 2 8.09 2.45 8.81 3.17L6.89 5.09H11.56V0.44L10.15 2.15Z"/>
-          </svg>
-          Regenerate
-        </button>
+        <button class="btn btn-secondary" id="generateBtn">Generate Draft</button>
         <button class="btn btn-primary" id="insertBtn" disabled>Insert Reply</button>
       </div>
     </div>
@@ -941,7 +583,7 @@ function ensureShadowRoot(): ShadowRoot {
   const closeBtn = shadow.getElementById('closeModal') as HTMLButtonElement;
   const cancelBtn = shadow.getElementById('cancelBtn') as HTMLButtonElement;
   const insertBtn = shadow.getElementById('insertBtn') as HTMLButtonElement;
-  const regenerateBtn = shadow.getElementById('regenerateBtn') as HTMLButtonElement;
+  const generateBtn = shadow.getElementById('generateBtn') as HTMLButtonElement;
 
   const draftTextarea = shadow.getElementById('draftTextarea') as HTMLTextAreaElement;
 
@@ -962,19 +604,6 @@ function ensureShadowRoot(): ShadowRoot {
       hideModal();
     }
   });
-
-  // Toggle Post Preview collapse/expand
-  const togglePreview = shadow.getElementById('togglePreview');
-  const postPreviewBody = shadow.getElementById('postPreviewBody');
-  const previewArrow = shadow.getElementById('previewArrow');
-  if (togglePreview && postPreviewBody && previewArrow) {
-    togglePreview.addEventListener('click', () => {
-      const isCollapsed = postPreviewBody.classList.toggle('collapsed');
-      previewArrow.textContent = isCollapsed ? '▲' : '▼';
-    });
-  }
-
-
 
   // Insert Draft into Editor
   insertBtn.addEventListener('click', () => {
@@ -1004,8 +633,8 @@ function ensureShadowRoot(): ShadowRoot {
     });
   });
 
-  // Regenerate Button handler
-  regenerateBtn.addEventListener('click', () => {
+  // Generate Button handler
+  generateBtn.addEventListener('click', () => {
     triggerGeneration();
   });
 
@@ -1020,35 +649,45 @@ function triggerGeneration() {
     console.log('AI Reply Extension: Generation already in progress. Ignoring duplicate trigger.');
     return;
   }
-  isGenerating = true;
 
   const shadow = ensureShadowRoot();
-  const loadingOverlay = shadow.getElementById('loadingOverlay') as HTMLDivElement;
+  const postContentInput = shadow.getElementById('postContentInput') as HTMLTextAreaElement;
+  const postText = postContentInput ? postContentInput.value.trim() : '';
+
   const errorContainer = shadow.getElementById('errorContainer') as HTMLDivElement;
+  const loadingOverlay = shadow.getElementById('loadingOverlay') as HTMLDivElement;
   const draftTextarea = shadow.getElementById('draftTextarea') as HTMLTextAreaElement;
   const insertBtn = shadow.getElementById('insertBtn') as HTMLButtonElement;
-  const regenerateBtn = shadow.getElementById('regenerateBtn') as HTMLButtonElement;
+  const generateBtn = shadow.getElementById('generateBtn') as HTMLButtonElement;
+
+  if (!postText) {
+    errorContainer.textContent = 'Please paste or type some LinkedIn post content first.';
+    errorContainer.classList.add('active');
+    return;
+  }
+
+  isGenerating = true;
 
   // Clear states
   errorContainer.classList.remove('active');
   loadingOverlay.classList.add('active');
   insertBtn.disabled = true;
-  if (regenerateBtn) {
-    regenerateBtn.disabled = true;
+  if (generateBtn) {
+    generateBtn.disabled = true;
   }
 
   chrome.runtime.sendMessage(
     {
       action: 'generateReply',
-      postText: activePostText,
+      postText: postText,
       tone: currentTone,
       length: currentLength
     },
     (response) => {
       isGenerating = false;
       loadingOverlay.classList.remove('active');
-      if (regenerateBtn) {
-        regenerateBtn.disabled = false;
+      if (generateBtn) {
+        generateBtn.disabled = false;
       }
 
       if (chrome.runtime.lastError) {
@@ -1061,7 +700,7 @@ function triggerGeneration() {
       if (response && response.success) {
         if (response.reply === 'POST_TEXT_NOT_FOUND') {
           draftTextarea.value = '';
-          errorContainer.textContent = 'LinkGenie could not detect a clear post body from this card to generate a reply.';
+          errorContainer.textContent = 'LinkGenie could not detect a clear post body from the provided text to generate a reply.';
           errorContainer.classList.add('active');
           insertBtn.disabled = true;
         } else {
@@ -1083,19 +722,31 @@ function triggerGeneration() {
 function openAIModal(editor: HTMLElement, container: HTMLElement) {
   activeEditor = editor;
   activeContainer = container;
-  activePostText = extractPostText(editor);
 
   const shadow = ensureShadowRoot();
   
-  // Set preview text
-  const postPreviewBody = shadow.getElementById('postPreviewBody') as HTMLDivElement;
-  if (postPreviewBody) {
-    postPreviewBody.textContent = activePostText || '(No post text detected. A generic reply will be generated.)';
+  // Clear post content input and draft textarea
+  const postContentInput = shadow.getElementById('postContentInput') as HTMLTextAreaElement;
+  if (postContentInput) {
+    postContentInput.value = '';
+  }
+  const draftTextarea = shadow.getElementById('draftTextarea') as HTMLTextAreaElement;
+  if (draftTextarea) {
+    draftTextarea.value = '';
   }
 
-  // Reset text area
-  const draftTextarea = shadow.getElementById('draftTextarea') as HTMLTextAreaElement;
-  draftTextarea.value = '';
+  // Clear error states
+  const errorContainer = shadow.getElementById('errorContainer') as HTMLDivElement;
+  if (errorContainer) {
+    errorContainer.classList.remove('active');
+    errorContainer.textContent = '';
+  }
+
+  // Disable Insert button initially
+  const insertBtn = shadow.getElementById('insertBtn') as HTMLButtonElement;
+  if (insertBtn) {
+    insertBtn.disabled = true;
+  }
 
   // Detect and set Dark Theme dynamically based on LinkedIn page status
   const backdrop = shadow.querySelector('.backdrop') as HTMLDivElement;
@@ -1112,8 +763,10 @@ function openAIModal(editor: HTMLElement, container: HTMLElement) {
   // Show backdrop
   backdrop.classList.add('active');
 
-  // Trigger generation
-  triggerGeneration();
+  // Focus on the post content input so the user can paste immediately
+  if (postContentInput) {
+    postContentInput.focus();
+  }
 }
 
 /**
