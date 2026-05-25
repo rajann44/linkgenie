@@ -12,9 +12,9 @@
 
 **Detailed Description** [REQUIRED]
 ```text
-LinkGenie is a lightweight, privacy-focused productivity assistant designed to help you draft context-aware replies to LinkedIn posts directly from your feed. 
+LinkGenie is a lightweight, privacy-focused productivity assistant designed to help you draft context-aware replies to LinkedIn posts directly from your feed. It is fully open source under the MIT license — the complete source code is available at https://github.com/rajann44/linkgenie for anyone to inspect, audit, or contribute to.
 
-Stop wasting time staring at a blank text box trying to craft the perfect response. Whether you want to provide professional insights, support a connection with a warm message, or ask an analytical question, LinkGenie helps you build engaging, natural-sounding replies that match the conversation flow.
+Stop wasting time staring at a blank text box trying to craft the perfect response. Whether you want to provide professional insights, support a connection with a warm message, or ask an analytical question, LinkGenie helps you build engaging, natural-sounding replies that match the conversation flow. Because the extension is open source and serverless, there are no hidden network calls or proprietary backends — everything the extension does is visible in the public repository.
 
 ### Key Features
 - Contextual Drafts: Instantly extracts the text of the LinkedIn post you are viewing to generate highly relevant replies.
@@ -23,6 +23,7 @@ Stop wasting time staring at a blank text box trying to craft the perfect respon
 - Personalization Profiles: Customize a default persona (e.g. "A senior web performance developer") so generated drafts sound naturally like you.
 - Inline Integration: Seamlessly adds an "AI Reply" button right next to the native LinkedIn comment input emojis and icons.
 - Fully Serverless: Connects directly to Google Gemini, OpenAI GPT, or Anthropic Claude using your own API Key—no middleman, no tracking, and no external storage of your data.
+- Open Source & Auditable: The complete source code is publicly available on GitHub under the MIT license. Anyone can inspect, verify, or contribute to it.
 
 ### How to Use It
 1. Click the extension icon and select your preferred LLM Provider (Gemini, OpenAI, or Claude).
@@ -34,6 +35,9 @@ Stop wasting time staring at a blank text box trying to craft the perfect respon
 
 ### Privacy First
 LinkGenie is 100% serverless. We do not operate any backend servers. Your settings, API keys, and configurations are stored securely inside your local browser profile. Post data and API keys are only transmitted directly to your chosen AI endpoint (Google, OpenAI, or Anthropic) via official secure HTTPS connections.
+
+### Open Source
+LinkGenie is fully open source and licensed under MIT. The complete extension source code is available for public review at https://github.com/rajann44/linkgenie — so you never have to take our privacy claims on faith.
 ```
 
 **Category** [REQUIRED]
@@ -51,11 +55,11 @@ LinkGenie is 100% serverless. We do not operate any backend servers. Your settin
 | Asset | Dimensions | Status | Filename |
 |-------|-----------|--------|----------|
 | Store Icon [REQUIRED] | 128×128 PNG | ✅ Ready | `extension/icons/icon128.png` |
-| Screenshot 1 [REQUIRED] | 1280×800 or 640×400 | ⬜ Not created | |
-| Screenshot 2 [RECOMMENDED] | 1280×800 or 640×400 | ⬜ Not created | |
-| Screenshot 3 [RECOMMENDED] | 1280×800 or 640×400 | ⬜ Not created | |
-| Small Promo Tile [RECOMMENDED] | 440×280 | ⬜ Not created | |
-| Marquee Promo Tile | 1400×560 | ⬜ Not created | |
+| Screenshot 1 [REQUIRED] | 1280×800 | ✅ Ready | `cws_assets/screenshot1_padded.png` |
+| Screenshot 2 [RECOMMENDED] | 1280×800 | ✅ Ready | `cws_assets/screenshot2_padded.png` |
+| Screenshot 3 [RECOMMENDED] | 1280×800 | ⬜ Optional | |
+| Small Promo Tile [RECOMMENDED] | 440×280 | ⬜ Optional | |
+| Marquee Promo Tile | 1400×560 | ⬜ Optional | |
 
 ### Screenshot Notes
 - **Screenshot 1:** Show the inline "AI Reply" button positioned next to the comment toolbar on a LinkedIn post.
@@ -95,7 +99,7 @@ LinkGenie is 100% serverless. We do not operate any backend servers. Your settin
 ## Privacy Policy
 
 **Privacy Policy URL** [REQUIRED]
-`https://github.com/[YOUR_USERNAME]/[YOUR_REPO]/blob/main/PRIVACY_POLICY.md` (Update with your live URL once pushed)
+`https://github.com/rajann44/linkgenie/blob/main/PRIVACY_POLICY.md`
 
 
 ## Distribution
@@ -108,16 +112,16 @@ LinkGenie is 100% serverless. We do not operate any backend servers. Your settin
 ## Developer Info
 
 **Publisher Name** [REQUIRED]
-`[YOUR_PUBLISHER_NAME]`
+`Rajan Chaudhary`
 
 **Contact Email** [REQUIRED]
 `rajan.chaudhary@web.de`
 
 **Support URL / Email** [RECOMMENDED]
-`https://github.com/[YOUR_USERNAME]/[YOUR_REPO]/issues` (Alternatively: `https://[YOUR-VERCEL-DOMAIN].vercel.app/#support`)
+`https://github.com/rajann44/linkgenie/issues`
 
 **Homepage URL** [RECOMMENDED]
-`https://github.com/[YOUR_USERNAME]/[YOUR_REPO]`
+`https://github.com/rajann44/linkgenie`
 
 
 ## Version History
