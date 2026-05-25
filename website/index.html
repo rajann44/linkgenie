@@ -1,23 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="google-site-verification" content="-1HJhoDnS1bLgiVllv2PNeaM2YbZJNLR_vz0ldIHhQ4" />
-  
+
   <!-- SEO Meta Tags -->
   <title>LinkGenie - Privacy-First AI LinkedIn Reply Assistant</title>
-  <meta name="description" content="Draft professional, contextual LinkedIn replies inline using AI. LinkGenie is a serverless, privacy-first Chrome Extension that connects directly to Gemini, OpenAI, or Claude.">
-  <meta name="keywords" content="LinkedIn AI assistant, Chrome Extension, LinkedIn replies, serverless AI, Gemini, OpenAI, Claude, privacy-first AI">
-  
+  <meta name="description"
+    content="Draft professional, contextual LinkedIn replies inline using AI. LinkGenie is a serverless, privacy-first Chrome Extension that connects directly to Gemini, OpenAI, or Claude.">
+  <meta name="keywords"
+    content="LinkedIn AI assistant, Chrome Extension, LinkedIn replies, serverless AI, Gemini, OpenAI, Claude, privacy-first AI">
+
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="LinkGenie - AI LinkedIn Reply Assistant">
-  <meta property="og:description" content="Draft professional, contextual LinkedIn replies inline using AI. 100% serverless, private, and customizable.">
-  
+  <meta property="og:description"
+    content="Draft professional, contextual LinkedIn replies inline using AI. 100% serverless, private, and customizable.">
+
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
   <!-- Header -->
@@ -42,9 +47,11 @@
     <div class="container hero-grid">
       <div class="hero-text">
         <h1>Write LinkedIn Replies That Get Noticed, Powered by AI</h1>
-        <p>LinkGenie is a lightweight, privacy-focused Chrome Extension that drafts context-aware replies inline directly inside your LinkedIn feed. Fully serverless—no tracking, no intermediate databases.</p>
+        <p>LinkGenie is a lightweight, privacy-focused Chrome Extension that drafts context-aware replies inline
+          directly inside your LinkedIn feed. Fully serverless—no tracking, no intermediate databases.</p>
         <div class="btn-group">
-          <a href="https://github.com/rajann44/linkgenie/releases/tag/v1.0.0" class="btn btn-primary">Download v1.0.0 (ZIP)</a>
+          <a href="https://github.com/rajann44/linkgenie/releases/tag/v1.0.0" class="btn btn-primary">Download v1.0.0
+            (ZIP)</a>
           <a href="https://github.com/rajann44/linkgenie" class="btn btn-secondary" target="_blank">View on GitHub</a>
         </div>
       </div>
@@ -56,7 +63,8 @@
             <div class="dot dot-green"></div>
             <div class="window-title">LINKGENIE DRAFT PREVIEW</div>
           </div>
-          <img src="assets/screenshot1.png" alt="LinkGenie Modal Preview" style="width: 100%; height: auto; display: block;">
+          <img src="assets/screenshot1.png" alt="LinkGenie Modal Preview"
+            style="width: 100%; height: auto; display: block;">
         </div>
       </div>
     </div>
@@ -67,28 +75,33 @@
     <div class="container">
       <div class="section-header">
         <h2>Built with Privacy & Power</h2>
-        <p>Unlike other AI assistants, LinkGenie is completely serverless, communicating directly with your LLM endpoints securely from your browser.</p>
+        <p>Unlike other AI assistants, LinkGenie is completely serverless, communicating directly with your LLM
+          endpoints securely from your browser.</p>
       </div>
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-icon">🔒</div>
           <h3>100% Serverless & Private</h3>
-          <p>Your API Keys, configuration, and custom personas stay secure on your device. We use no intermediate servers, trackers, or databases.</p>
+          <p>Your API Keys, configuration, and custom personas stay secure on your device. We use no intermediate
+            servers, trackers, or databases.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🧠</div>
           <h3>Context-Aware Drafting</h3>
-          <p>LinkGenie crawls the parent LinkedIn post content to construct contextually relevant replies instead of repeating generic phrases.</p>
+          <p>LinkGenie crawls the parent LinkedIn post content to construct contextually relevant replies instead of
+            repeating generic phrases.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">⚙️</div>
           <h3>Multiple AI Providers</h3>
-          <p>Directly connect to Google Gemini, OpenAI GPT, or Anthropic Claude APIs using your own personal access tokens.</p>
+          <p>Directly connect to Google Gemini, OpenAI GPT, or Anthropic Claude APIs using your own personal access
+            tokens.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🎭</div>
           <h3>Personalized Persona</h3>
-          <p>Add a custom description of your professional background, role, or preferred style to generate drafts that naturally sound like you.</p>
+          <p>Add a custom description of your professional background, role, or preferred style to generate drafts that
+            naturally sound like you.</p>
         </div>
       </div>
     </div>
@@ -99,26 +112,29 @@
     <div class="container">
       <div class="section-header">
         <h2>Try the Generator</h2>
-        <p>Select a mock LinkedIn post and tone configuration to see how LinkGenie generates contextual draft responses in real-time.</p>
+        <p>Select a mock LinkedIn post and tone configuration to see how LinkGenie generates contextual draft responses
+          in real-time.</p>
       </div>
-      
+
       <div class="sim-grid">
         <!-- Input Configurations -->
         <div class="sim-pane">
           <div class="sim-field">
             <label for="simPostSelect">Select LinkedIn Post Topic</label>
-            <select id="simPostSelect" class="sim-textarea" style="height: 44px; padding: 0 12px; background: rgba(0, 0, 0, 0.3);">
+            <select id="simPostSelect" class="sim-textarea"
+              style="height: 44px; padding: 0 12px; background: rgba(0, 0, 0, 0.3);">
               <option value="sales">Sales & Outreach automated tools inquiry</option>
               <option value="tech">Web Performance optimization post (LCP/CLS)</option>
               <option value="hiring">Hiring expansion announcement (Frontend Engineers)</option>
             </select>
           </div>
-          
+
           <div class="sim-field">
             <label>LinkedIn Post Content (Scraped Context)</label>
-            <textarea id="simPostText" class="sim-textarea" readonly>I'm looking for recommendations for a tool to automate follow-ups and scale our sales outreach on LinkedIn and Instagram. We want something lightweight but highly personalized. Any recommendations?</textarea>
+            <textarea id="simPostText" class="sim-textarea"
+              readonly>I'm looking for recommendations for a tool to automate follow-ups and scale our sales outreach on LinkedIn and Instagram. We want something lightweight but highly personalized. Any recommendations?</textarea>
           </div>
-          
+
           <div class="sim-field">
             <label>Tone Preset</label>
             <div class="sim-select-group" id="simToneSelect">
@@ -144,7 +160,8 @@
         <div class="sim-pane" style="justify-content: space-between;">
           <div class="sim-field" style="height: 100%;">
             <label>Generated Draft (Editable)</label>
-            <textarea id="simOutputText" class="sim-textarea" style="height: calc(100% - 24px);" placeholder="Configure settings and click Generate Draft..." readonly></textarea>
+            <textarea id="simOutputText" class="sim-textarea" style="height: calc(100% - 24px);"
+              placeholder="Configure settings and click Generate Draft..." readonly></textarea>
           </div>
         </div>
       </div>
@@ -182,17 +199,20 @@
         <div class="step-card">
           <div class="step-number">01</div>
           <h3>Download Package</h3>
-          <p>Grab the latest pre-built package zip archive from our releases page on GitHub and unzip the contents to a folder on your computer.</p>
+          <p>Grab the latest pre-built package zip archive from our releases page on GitHub and unzip the contents to a
+            folder on your computer.</p>
         </div>
         <div class="step-card">
           <div class="step-number">02</div>
           <h3>Install Unpacked</h3>
-          <p>Open Google Chrome, navigate to <code>chrome://extensions/</code>, enable <strong>Developer mode</strong> in the top-right, click <strong>Load unpacked</strong>, and select the unzipped directory.</p>
+          <p>Open Google Chrome, navigate to <code>chrome://extensions/</code>, enable <strong>Developer mode</strong>
+            in the top-right, click <strong>Load unpacked</strong>, and select the unzipped directory.</p>
         </div>
         <div class="step-card">
           <div class="step-number">03</div>
           <h3>Add LLM API Keys</h3>
-          <p>Click the LinkGenie extension icon in your Chrome toolbar to open settings. Enter your API Key for Gemini, OpenAI, or Anthropic and click <strong>Save Configuration</strong>.</p>
+          <p>Click the LinkGenie extension icon in your Chrome toolbar to open settings. Enter your API Key for Gemini,
+            OpenAI, or Anthropic and click <strong>Save Configuration</strong>.</p>
         </div>
       </div>
     </div>
@@ -211,24 +231,50 @@
       <div id="support-content" class="tab-content active">
         <div class="privacy-body">
           <h3>LinkGenie Support Hub</h3>
-          <p><strong>Need help or have questions about LinkGenie?</strong> We are committed to providing a great user experience. Because LinkGenie is completely serverless and runs locally inside your browser, most issues are related to configuration or browser permissions.</p>
+          <p><strong>Need help or have questions about LinkGenie?</strong> We are committed to providing a great user
+            experience. Because LinkGenie is completely serverless and runs locally inside your browser, most issues are
+            related to configuration or browser permissions.</p>
 
           <h3>1. How to Contact Support</h3>
-          <p>For technical support, bug reports, feature requests, or developer questions, please open an issue directly on our repository to track bugs and requests:</p>
+          <p>For technical support, bug reports, feature requests, or developer questions, please open an issue directly
+            on our repository to track bugs and requests:</p>
           <ul>
-            <li><strong>GitHub Issues:</strong> <a href="https://github.com/rajann44/linkgenie/issues" target="_blank" style="color: #6366f1;">Open a GitHub Issue</a></li>
+            <li>
+              <strong>GitHub Issues:</strong>
+              <a href="https://github.com/rajann44/linkgenie/issues" target="_blank" rel="noopener noreferrer"
+                style="color: #6366f1;">
+                Open a GitHub Issue
+              </a>
+            </li>
+
+            <li>
+              <strong>Email:</strong>
+              <a href="#" id="contact-email" style="color: #6366f1;" aria-label="Send email to Rajan">
+                rajan<span aria-hidden="true"> [at] </span>chaudhary<span aria-hidden="true"> [dot] </span>web.de
+              </a>
+            </li>
           </ul>
 
           <h3>2. Troubleshooting FAQ</h3>
-          
-          <h4 style="color: var(--text-main); margin-top: 16px; margin-bottom: 8px; font-size: 15px;">Q: Why doesn't the "AI Reply" button appear on LinkedIn?</h4>
-          <p>A: Please make sure the extension is successfully loaded and enabled in <code>chrome://extensions/</code>. If it is enabled and the button still doesn't appear, try hard refreshing the LinkedIn tab. LinkedIn updates its UI structure occasionally, and we recommend checking for the latest LinkGenie release package to resolve any structural issues.</p>
 
-          <h4 style="color: var(--text-main); margin-top: 16px; margin-bottom: 8px; font-size: 15px;">Q: How do I configure my API Keys?</h4>
-          <p>A: Click the extension's icon in the browser toolbar or go to its options page. From there, select your preferred provider (Gemini, OpenAI, or Claude), enter your API Key, and save. All keys are stored safely on your own machine in <code>chrome.storage.sync</code>.</p>
+          <h4 style="color: var(--text-main); margin-top: 16px; margin-bottom: 8px; font-size: 15px;">Q: Why doesn't the
+            "AI Reply" button appear on LinkedIn?</h4>
+          <p>A: Please make sure the extension is successfully loaded and enabled in <code>chrome://extensions/</code>.
+            If it is enabled and the button still doesn't appear, try hard refreshing the LinkedIn tab. LinkedIn updates
+            its UI structure occasionally, and we recommend checking for the latest LinkGenie release package to resolve
+            any structural issues.</p>
 
-          <h4 style="color: var(--text-main); margin-top: 16px; margin-bottom: 8px; font-size: 15px;">Q: Do you collect or track my LinkedIn data?</h4>
-          <p>A: No. We do not run any backend servers and have zero tracking scripts. All data processing (such as extracting the post context) happens entirely in the extension's local service worker and is sent directly and securely via HTTPS to your selected AI provider's API endpoint.</p>
+          <h4 style="color: var(--text-main); margin-top: 16px; margin-bottom: 8px; font-size: 15px;">Q: How do I
+            configure my API Keys?</h4>
+          <p>A: Click the extension's icon in the browser toolbar or go to its options page. From there, select your
+            preferred provider (Gemini, OpenAI, or Claude), enter your API Key, and save. All keys are stored safely on
+            your own machine in <code>chrome.storage.sync</code>.</p>
+
+          <h4 style="color: var(--text-main); margin-top: 16px; margin-bottom: 8px; font-size: 15px;">Q: Do you collect
+            or track my LinkedIn data?</h4>
+          <p>A: No. We do not run any backend servers and have zero tracking scripts. All data processing (such as
+            extracting the post context) happens entirely in the extension's local service worker and is sent directly
+            and securely via HTTPS to your selected AI provider's API endpoint.</p>
         </div>
       </div>
 
@@ -237,43 +283,65 @@
         <div class="privacy-body">
           <h3>Privacy Policy for LinkGenie</h3>
           <p><strong>Last updated: 2026-05-25</strong></p>
-          <p>We value your privacy. This Privacy Policy explains how LinkGenie handles user data. By using the LinkGenie Chrome extension, you agree to the practices outlined below.</p>
-          
+          <p>We value your privacy. This Privacy Policy explains how LinkGenie handles user data. By using the LinkGenie
+            Chrome extension, you agree to the practices outlined below.</p>
+
           <h3>1. What Data We Collect & How We Use It</h3>
-          <p>LinkGenie is designed as a serverless utility. We do not operate any backend servers and do not collect, monitor, or store your data on our own infrastructure.</p>
+          <p>LinkGenie is designed as a serverless utility. We do not operate any backend servers and do not collect,
+            monitor, or store your data on our own infrastructure.</p>
           <ul>
-            <li><strong>Authentication Info (API Keys):</strong> To generate drafts, you must configure your personal API Keys. These keys are stored locally inside your browser profile and are transmitted securely (via HTTPS) directly to the respective AI provider's official endpoint when a request is made.</li>
-            <li><strong>Website Content (LinkedIn Post Text):</strong> When you click the inline "AI Reply" button, the extension reads the text of the post you are replying to. This content is sent directly to your selected LLM provider as context. We do not retain or transmit this text anywhere else.</li>
-            <li><strong>User Settings (Tone, Length, Persona):</strong> Your settings (such as preferred tone, draft length, and custom persona) are stored locally to personalize your generation prompts.</li>
+            <li><strong>Authentication Info (API Keys):</strong> To generate drafts, you must configure your personal
+              API Keys. These keys are stored locally inside your browser profile and are transmitted securely (via
+              HTTPS) directly to the respective AI provider's official endpoint when a request is made.</li>
+            <li><strong>Website Content (LinkedIn Post Text):</strong> When you click the inline "AI Reply" button, the
+              extension reads the text of the post you are replying to. This content is sent directly to your selected
+              LLM provider as context. We do not retain or transmit this text anywhere else.</li>
+            <li><strong>User Settings (Tone, Length, Persona):</strong> Your settings (such as preferred tone, draft
+              length, and custom persona) are stored locally to personalize your generation prompts.</li>
           </ul>
 
           <h3>2. Data Storage</h3>
-          <p>All configurations, keys, and settings are stored locally on your device using the <code>chrome.storage.sync</code> API. If you have Chrome sync enabled, these settings may sync across your own authenticated devices via Google's official synchronization servers. We have no access to this data.</p>
+          <p>All configurations, keys, and settings are stored locally on your device using the
+            <code>chrome.storage.sync</code> API. If you have Chrome sync enabled, these settings may sync across your
+            own authenticated devices via Google's official synchronization servers. We have no access to this data.
+          </p>
 
           <h3>3. Third-Party Services</h3>
-          <p>When you use LinkGenie, requests are sent directly to the AI provider you select in the settings. These third-party services have their own privacy policies governing how they handle input data:</p>
+          <p>When you use LinkGenie, requests are sent directly to the AI provider you select in the settings. These
+            third-party services have their own privacy policies governing how they handle input data:</p>
           <ul>
-            <li>Google Gemini API: <a href="https://policies.google.com/privacy" target="_blank" style="color: #6366f1;">Google Privacy Policy</a></li>
-            <li>OpenAI API: <a href="https://openai.com/privacy" target="_blank" style="color: #6366f1;">OpenAI Privacy Policy</a></li>
-            <li>Anthropic Claude API: <a href="https://www.anthropic.com/privacy" target="_blank" style="color: #6366f1;">Anthropic Privacy Policy</a></li>
+            <li>Google Gemini API: <a href="https://policies.google.com/privacy" target="_blank"
+                style="color: #6366f1;">Google Privacy Policy</a></li>
+            <li>OpenAI API: <a href="https://openai.com/privacy" target="_blank" style="color: #6366f1;">OpenAI Privacy
+                Policy</a></li>
+            <li>Anthropic Claude API: <a href="https://www.anthropic.com/privacy" target="_blank"
+                style="color: #6366f1;">Anthropic Privacy Policy</a></li>
           </ul>
 
           <h3>4. Data Sharing & Disclosure</h3>
-          <p>We do not sell, rent, trade, or share any user data with third parties. Data is only sent to the specific AI provider API configured by you, solely to fulfill content generation requests.</p>
+          <p>We do not sell, rent, trade, or share any user data with third parties. Data is only sent to the specific
+            AI provider API configured by you, solely to fulfill content generation requests.</p>
 
           <h3>5. Your Choices & Data Deletion</h3>
-          <p>You can view, update, or delete your API Keys and configurations at any time through the LinkGenie settings page. Uninstalling the extension will automatically purge all associated data from your browser's local storage.</p>
-          
+          <p>You can view, update, or delete your API Keys and configurations at any time through the LinkGenie settings
+            page. Uninstalling the extension will automatically purge all associated data from your browser's local
+            storage.</p>
+
           <h3>6. Contact</h3>
-          <p>If you have any questions or concerns regarding this Privacy Policy, please open an issue in the project repository: <a href="https://github.com/rajann44/linkgenie/issues" target="_blank" style="color: #6366f1;">GitHub Issues</a>.</p>
+          <p>If you have any questions or concerns regarding this Privacy Policy, please open an issue in the project
+            repository: <a href="https://github.com/rajann44/linkgenie/issues" target="_blank"
+              style="color: #6366f1;">GitHub Issues</a>.</p>
         </div>
       </div>
 
       <!-- Disclosures Tab -->
       <div id="disclosures-content" class="tab-content">
-        <h3 style="font-family: var(--font-heading); font-size: 20px; font-weight: 600; margin-bottom: 16px;">Chrome Web Store Declarations</h3>
-        <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">The following disclosures represent how data permissions are utilized by the LinkGenie extension as declared to the Chrome Web Store review team.</p>
-        
+        <h3 style="font-family: var(--font-heading); font-size: 20px; font-weight: 600; margin-bottom: 16px;">Chrome Web
+          Store Declarations</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">The following disclosures
+          represent how data permissions are utilized by the LinkGenie extension as declared to the Chrome Web Store
+          review team.</p>
+
         <table class="disclosure-table">
           <thead>
             <tr>
@@ -286,12 +354,14 @@
             <tr>
               <td><code>storage</code></td>
               <td>Permission</td>
-              <td>Used to locally store extension preferences (provider, API keys, models, and custom personas) in the user's secure browser profile.</td>
+              <td>Used to locally store extension preferences (provider, API keys, models, and custom personas) in the
+                user's secure browser profile.</td>
             </tr>
             <tr>
               <td><code>https://*.linkedin.com/*</code></td>
               <td>Host Permission</td>
-              <td>Required to detect the active comment composer, scan parent elements for post text, and automatically inject the inline trigger button.</td>
+              <td>Required to detect the active comment composer, scan parent elements for post text, and automatically
+                inject the inline trigger button.</td>
             </tr>
             <tr>
               <td><code>https://generativelanguage.googleapis.com/*</code></td>
@@ -335,5 +405,19 @@
 
   <!-- Script -->
   <script src="script.js"></script>
+  <script>
+    (() => {
+      const user = "rajan.chaudhary";
+      const domain = "web.de";
+      const email = `${user}@${domain}`;
+      const link = document.getElementById("contact-email");
+
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.location.href = `mailto:${email}`;
+      });
+    })();
+  </script>
 </body>
+
 </html>
