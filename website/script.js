@@ -3,18 +3,50 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
-  tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
+  const switchTab = (tabId) => {
+    const targetBtn = Array.from(tabBtns).find(btn => btn.getAttribute('data-tab') === tabId);
+    const targetContent = document.getElementById(tabId);
+    
+    if (targetBtn && targetContent) {
       // Remove active classes
       tabBtns.forEach(b => b.classList.remove('active'));
       tabContents.forEach(c => c.classList.remove('active'));
 
       // Add active classes
-      btn.classList.add('active');
+      targetBtn.classList.add('active');
+      targetContent.classList.add('active');
+    }
+  };
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
       const tabId = btn.getAttribute('data-tab');
-      document.getElementById(tabId).classList.add('active');
+      switchTab(tabId);
     });
   });
+
+  // Handle URL hash on load and change to switch to correct tab
+  const handleHash = () => {
+    const hash = window.location.hash;
+    if (hash === '#support' || hash === '#privacy' || hash === '#disclosures') {
+      const tabMap = {
+        '#support': 'support-content',
+        '#privacy': 'privacy-content',
+        '#disclosures': 'disclosures-content'
+      };
+      const targetTabId = tabMap[hash];
+      switchTab(targetTabId);
+      
+      // Scroll to the legal section
+      const legalSection = document.getElementById('legal');
+      if (legalSection) {
+        legalSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  handleHash();
+  window.addEventListener('hashchange', handleHash);
 
   // Simulator Logic
   const postSelect = document.getElementById('simPostSelect');

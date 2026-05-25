@@ -32,7 +32,7 @@
         <a href="#simulator">Simulator</a>
         <a href="#screenshots">Screenshots</a>
         <a href="#setup">Setup</a>
-        <a href="#legal" class="btn btn-secondary" style="padding: 6px 16px; font-size: 13px;">Privacy Policy</a>
+        <a href="#support" class="btn btn-secondary" style="padding: 6px 16px; font-size: 13px;">Support & Privacy</a>
       </nav>
     </div>
   </header>
@@ -202,12 +202,39 @@
   <section id="legal" class="tabs-section">
     <div class="container">
       <div class="tabs-nav">
-        <button class="tab-btn active" data-tab="privacy-content">Privacy Policy</button>
+        <button class="tab-btn active" data-tab="support-content">Support Hub</button>
+        <button class="tab-btn" data-tab="privacy-content">Privacy Policy</button>
         <button class="tab-btn" data-tab="disclosures-content">Developer Disclosures</button>
       </div>
 
+      <!-- Support Tab -->
+      <div id="support-content" class="tab-content active">
+        <div class="privacy-body">
+          <h3>LinkGenie Support Hub</h3>
+          <p><strong>Need help or have questions about LinkGenie?</strong> We are committed to providing a great user experience. Because LinkGenie is completely serverless and runs locally inside your browser, most issues are related to configuration or browser permissions.</p>
+
+          <h3>1. How to Contact Support</h3>
+          <p>For technical support, bug reports, feature requests, or developer questions, you can contact us in two ways:</p>
+          <ul>
+            <li><strong>GitHub Issues (Recommended):</strong> Open an issue directly on our repository to track bugs and requests. <a href="https://github.com/rajann44/linkgenie/issues" target="_blank" style="color: #6366f1;">Open a GitHub Issue</a></li>
+            <li><strong>Email Support:</strong> Send us an email at <a href="mailto:support@linkgenie.com" style="color: #6366f1;">support@linkgenie.com</a>. We try to respond to all inquiries within 24 to 48 hours.</li>
+          </ul>
+
+          <h3>2. Troubleshooting FAQ</h3>
+          
+          <h4 style="color: var(--text-main); margin-top: 16px; margin-bottom: 8px; font-size: 15px;">Q: Why doesn't the "AI Reply" button appear on LinkedIn?</h4>
+          <p>A: Please make sure the extension is successfully loaded and enabled in <code>chrome://extensions/</code>. If it is enabled and the button still doesn't appear, try hard refreshing the LinkedIn tab. LinkedIn updates its UI structure occasionally, and we recommend checking for the latest LinkGenie release package to resolve any structural issues.</p>
+
+          <h4 style="color: var(--text-main); margin-top: 16px; margin-bottom: 8px; font-size: 15px;">Q: How do I configure my API Keys?</h4>
+          <p>A: Click the extension's icon in the browser toolbar or go to its options page. From there, select your preferred provider (Gemini, OpenAI, or Claude), enter your API Key, and save. All keys are stored safely on your own machine in <code>chrome.storage.sync</code>.</p>
+
+          <h4 style="color: var(--text-main); margin-top: 16px; margin-bottom: 8px; font-size: 15px;">Q: Do you collect or track my LinkedIn data?</h4>
+          <p>A: No. We do not run any backend servers and have zero tracking scripts. All data processing (such as extracting the post context) happens entirely in the extension's local service worker and is sent directly and securely via HTTPS to your selected AI provider's API endpoint.</p>
+        </div>
+      </div>
+
       <!-- Privacy Tab -->
-      <div id="privacy-content" class="tab-content active">
+      <div id="privacy-content" class="tab-content">
         <div class="privacy-body">
           <h3>Privacy Policy for LinkGenie</h3>
           <p><strong>Last updated: 2026-05-25</strong></p>
@@ -299,6 +326,8 @@
         <a href="#features">Features</a>
         <a href="#simulator">Simulator</a>
         <a href="#setup">Setup Instructions</a>
+        <a href="#support">Support Hub</a>
+        <a href="#privacy">Privacy Policy</a>
         <a href="https://github.com/rajann44/linkgenie" target="_blank">GitHub</a>
       </div>
       <p class="copyright">&copy; 2026 LinkGenie. Licensed under MIT. All rights reserved.</p>
