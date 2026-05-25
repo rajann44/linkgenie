@@ -870,20 +870,20 @@ function findToolbar(editor: HTMLElement): HTMLElement | null {
 }
 
 const COPY_ICON_SVG = `
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
     <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
     <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
   </svg>
 `;
 
 const CHECK_ICON_SVG = `
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#05b03d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#05b03d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
     <polyline points="20 6 9 17 4 12"></polyline>
   </svg>
 `;
 
 /**
- * Locate all posts on page and inject a copy button into their social actions row.
+ * Locate all posts on page and inject a copy button into their top-right header menu group.
  */
 function injectCopyButtons() {
   const paragraphs = document.querySelectorAll('p[componentkey^="feed-commentary"]');
@@ -904,49 +904,56 @@ function injectCopyButtons() {
       return;
     }
 
-    // Find the Comment, Repost, or Send button to clone its structure
-    const buttons = Array.from(postRoot.querySelectorAll('button'));
-    const referenceBtn = buttons.find(btn => {
-      const text = (btn.innerText || '').toLowerCase().trim();
-      return text === 'comment' || text === 'repost' || text === 'send';
-    }) || buttons.find(btn => {
-      const text = (btn.innerText || '').toLowerCase().trim();
-      return text === 'like';
-    });
+    // Locate the control menu ("...") button inside this post root
+    const controlBtn = postRoot.querySelector('button[aria-label^="Open control menu"]') as HTMLButtonElement | null;
+    if (!controlBtn) return;
 
-    if (!referenceBtn) return;
-    const buttonWrapper = referenceBtn.parentElement;
-    if (!buttonWrapper) return;
-    const actionsRow = buttonWrapper.parentElement;
-    if (!actionsRow) return;
+    // Locate the header control menu button group container
+    const controlMenuContainer = controlBtn.closest('.feed-shared-update-v2__control-menu') || controlBtn.parentElement;
+    if (!controlMenuContainer) return;
 
     // Mark post card as injected
     postRoot.setAttribute('data-copy-injected', 'true');
 
-    // Clone the button's wrapper to preserve native layout/alignment tokens
-    const newWrapper = buttonWrapper.cloneNode(true) as HTMLElement;
-    const copyBtn = newWrapper.querySelector('button');
-    if (!copyBtn) return;
-
-    // Keep core styling but add class flag
-    copyBtn.className = referenceBtn.className + ' linkedin-post-copy-button';
+    // Create the Copy Button styled like LinkedIn's round Artdeco icon buttons
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'artdeco-button artdeco-button--circle artdeco-button--muted artdeco-button--1 artdeco-button--tertiary linkedin-post-copy-button';
+    copyBtn.type = 'button';
     copyBtn.title = 'Copy post text';
+    copyBtn.innerHTML = COPY_ICON_SVG;
 
-    // Replace the text container
-    const labelSpan = copyBtn.querySelector('.artdeco-button__text, span');
-    if (labelSpan) {
-      labelSpan.innerHTML = 'Copy';
-    }
+    // Apply strict matching layout tokens to align beautifully next to "..." and "X"
+    copyBtn.style.cssText = `
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      vertical-align: middle;
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      min-height: 32px;
+      padding: 0;
+      margin: 0 4px;
+      background: transparent;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      color: rgba(0, 0, 0, 0.6);
+      transition: background-color 0.15s, color 0.15s;
+    `;
 
-    // Replace the icon container
-    const iconContainer = copyBtn.querySelector('svg, .artdeco-button__icon');
-    if (iconContainer) {
-      iconContainer.outerHTML = COPY_ICON_SVG;
-    } else {
-      copyBtn.innerHTML = COPY_ICON_SVG + ' <span class="artdeco-button__text">Copy</span>';
-    }
+    // Add interactive hover states
+    copyBtn.addEventListener('mouseenter', () => {
+      copyBtn.style.backgroundColor = 'rgba(0, 0, 0, 0.08)';
+      copyBtn.style.color = 'rgba(0, 0, 0, 0.9)';
+    });
 
-    // Bind event logic
+    copyBtn.addEventListener('mouseleave', () => {
+      copyBtn.style.backgroundColor = 'transparent';
+      copyBtn.style.color = 'rgba(0, 0, 0, 0.6)';
+    });
+
+    // Handle copying and visual checkmark state on click
     copyBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
       e.preventDefault();
@@ -958,33 +965,19 @@ function injectCopyButtons() {
         await navigator.clipboard.writeText(textToCopy);
 
         // Success state feedback
-        const currentIcon = copyBtn.querySelector('svg');
-        if (currentIcon) {
-          currentIcon.outerHTML = CHECK_ICON_SVG;
-        }
-        const currentLabel = copyBtn.querySelector('.artdeco-button__text, span') as HTMLElement | null;
-        if (currentLabel) {
-          currentLabel.innerHTML = 'Copied!';
-          currentLabel.style.color = '#05b03d';
-        }
-
+        copyBtn.innerHTML = CHECK_ICON_SVG;
+        
         setTimeout(() => {
-          const checkIcon = copyBtn.querySelector('svg');
-          if (checkIcon) {
-            checkIcon.outerHTML = COPY_ICON_SVG;
-          }
-          if (currentLabel) {
-            currentLabel.innerHTML = 'Copy';
-            currentLabel.style.color = '';
-          }
+          copyBtn.innerHTML = COPY_ICON_SVG;
         }, 1500);
       } catch (err) {
         console.error('Failed to copy post text contents:', err);
       }
     });
 
-    // Append our native-styled clone to the social actions bar
-    actionsRow.appendChild(newWrapper);
+    // Append our native-styled button to the control menu container
+    // We insert it as the first child of the control group container (so it sits to the left of "...")
+    controlMenuContainer.insertBefore(copyBtn, controlMenuContainer.firstChild);
   });
 }
 
