@@ -1039,7 +1039,7 @@ function findActionBars(): HTMLElement[] {
   });
   
   // 2. Try SVG-based resolution (helps with obfuscated/dynamic class structures)
-  // We exclude thumbs-up to avoid selecting separate reaction wrapper containers
+  // We exclude thumbs-up/like buttons to avoid finding separate, nested reaction wrapper containers
   const svgIds = [
     '#comment-small',
     '#comment-medium',
@@ -1055,6 +1055,18 @@ function findActionBars(): HTMLElement[] {
         bars.add(btn.parentElement as HTMLElement);
       }
     });
+  });
+
+  // 3. Try Text-based resolution (fallback for obfuscated views where SVGs have no IDs)
+  // We search for elements with exact text "Comment", "Repost", or "Send"
+  const buttons = document.querySelectorAll('button, a');
+  buttons.forEach(btn => {
+    const text = (btn.textContent || '').trim();
+    if (text === 'Comment' || text === 'Repost' || text === 'Send') {
+      if (btn.parentElement) {
+        bars.add(btn.parentElement as HTMLElement);
+      }
+    }
   });
   
   const resolvedBars = Array.from(bars);
@@ -1200,6 +1212,17 @@ function scanAndInject() {
   bars.forEach((bar) => {
     const htmlBar = bar as HTMLElement;
 
+    // Skip action bars that reside inside comments section
+    if (
+      htmlBar.closest('.comments-comment-item') ||
+      htmlBar.closest('.comment-item') ||
+      htmlBar.closest('.comments-reply-item') ||
+      htmlBar.closest('[class*="comments-"]') ||
+      htmlBar.closest('[class*="comment-"]')
+    ) {
+      return;
+    }
+
     // Check if we've already injected for this action bar
     if (htmlBar.getAttribute('data-lg-copy-bar-injected') === 'true') {
       return;
@@ -1301,7 +1324,9 @@ function scanAndInject() {
           // Ensure it's not inside a comment, nor inside the post header/actor/profile block (to avoid copying job title)
           const isComment = htmlFound.closest('.comments-comment-item') || 
                             htmlFound.closest('.comment-item') || 
-                            htmlFound.className.toLowerCase().includes('comment');
+                            htmlFound.closest('.comments-reply-item') ||
+                            htmlFound.closest('[class*="comment"]') ||
+                            htmlFound.closest('[class*="reply"]');
                             
           const isHeader = htmlFound.closest('.update-components-actor') || 
                            htmlFound.closest('.feed-shared-actor') || 
