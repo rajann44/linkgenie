@@ -870,7 +870,7 @@ function findToolbar(editor: HTMLElement): HTMLElement | null {
 }
 
 /**
- * Injects stylesheet rules into the main page's head for the floating Copy button overlays.
+ * Injects stylesheet rules into the main page's head for the Copy button overlays and action bar buttons.
  */
 function injectMainPageStyles() {
   const styleId = 'linkgenie-main-styles';
@@ -973,19 +973,64 @@ function injectMainPageStyles() {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+
+    /* Social Action Bar Copy Button styling to match native buttons */
+    .linkgenie-action-bar-copy-btn {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-family: inherit !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      height: 48px !important;
+      padding: 0 12px !important;
+      color: rgba(0, 0, 0, 0.6) !important;
+      background: transparent !important;
+      border: none !important;
+      cursor: pointer !important;
+      border-radius: 4px !important;
+      transition: background-color 0.15s ease, color 0.15s ease !important;
+      vertical-align: middle !important;
+      flex-grow: 1 !important;
+    }
+
+    .theme--dark .linkgenie-action-bar-copy-btn,
+    [data-theme="dark"] .linkgenie-action-bar-copy-btn {
+      color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .linkgenie-action-bar-copy-btn:hover {
+      background-color: rgba(0, 0, 0, 0.08) !important;
+      color: rgba(0, 0, 0, 0.9) !important;
+    }
+
+    .theme--dark .linkgenie-action-bar-copy-btn:hover,
+    [data-theme="dark"] .linkgenie-action-bar-copy-btn:hover {
+      background-color: rgba(255, 255, 255, 0.08) !important;
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .linkgenie-action-bar-copy-btn svg {
+      margin-right: 4px !important;
+      flex-shrink: 0 !important;
+    }
+
+    .linkgenie-action-bar-copy-btn.success {
+      color: #30d158 !important;
+    }
   `;
   document.head.appendChild(style);
 }
 
 /**
  * Scans page for comment boxes and injects the "AI Reply" button,
- * and also injects "Copy Post" overlay buttons into descriptions.
+ * and also injects "Copy Post" overlay/action-bar buttons.
  */
 function scanAndInject() {
   // Inject main page styles if not already present
   injectMainPageStyles();
 
-  // 1. Inject Clipboard Copy buttons into post descriptions
+  // 1. Inject Clipboard Copy buttons into post descriptions (floating overlay fallback)
   const descriptionSelectors = [
     '.feed-shared-inline-show-more-text',
     '.expandable-text-box',
@@ -1061,6 +1106,173 @@ function scanAndInject() {
       htmlEl.appendChild(copyBtn);
       htmlEl.setAttribute('data-lg-copy-injected', 'true');
       console.log('AI Reply Extension: Injected copy button overlay into description element.');
+    });
+  });
+
+  // 1.5. Inject Clipboard Copy buttons into social action bars (Like/Comment/Repost/Send row)
+  const actionBarSelectors = [
+    '.feed-shared-social-action-bar',
+    '.social-actions',
+    '.feed-shared-social-actions'
+  ];
+
+  actionBarSelectors.forEach((selector) => {
+    const bars = document.querySelectorAll(selector);
+    bars.forEach((bar) => {
+      const htmlBar = bar as HTMLElement;
+
+      // Check if we've already injected for this action bar
+      if (htmlBar.getAttribute('data-lg-copy-bar-injected') === 'true') {
+        return;
+      }
+
+      // Create action bar copy button
+      const copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'artdeco-button artdeco-button--muted artdeco-button--4 artdeco-button--tertiary react-button__trigger linkgenie-action-bar-copy-btn';
+      copyBtn.setAttribute('aria-label', 'Copy post content');
+      copyBtn.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="linkgenie-copy-icon">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        <span class="artdeco-button__text">Copy Post</span>
+      `;
+
+      copyBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Find the parent post container
+        const postCard = htmlBar.closest('.feed-shared-update-v2') || 
+                         htmlBar.closest('[role="listitem"]') || 
+                         htmlBar.closest('.feed-shared-update') ||
+                         htmlBar.closest('.feed-shared-update-v4') ||
+                         htmlBar.closest('article') ||
+                         htmlBar.parentElement; // fallback to parent
+
+        if (!postCard) {
+          console.warn('LinkGenie: Could not find parent post card container.');
+          return;
+        }
+
+        // Find description elements
+        const descriptionSelectors = [
+          '.feed-shared-inline-show-more-text',
+          '.expandable-text-box',
+          '.feed-shared-update-v2__description-text',
+          '.update-components-text',
+          '.feed-shared-update-v2__commentary',
+          '.update-components-update-v2__commentary',
+          '.feed-shared-text'
+        ];
+
+        let descriptionEl: HTMLElement | null = null;
+        for (const descSel of descriptionSelectors) {
+          const found = postCard.querySelector(descSel);
+          if (found) {
+            if (
+              !found.closest('.comments-comment-item') &&
+              !found.closest('.comment-item') &&
+              !found.className.toLowerCase().includes('comment')
+            ) {
+              descriptionEl = found as HTMLElement;
+              break;
+            }
+          }
+        }
+
+        if (descriptionEl) {
+          const clone = descriptionEl.cloneNode(true) as HTMLElement;
+          
+          // Remove injected elements
+          const btnToRemove = clone.querySelector('.linkgenie-copy-btn');
+          if (btnToRemove) {
+            btnToRemove.remove();
+          }
+          const seeMoreElements = clone.querySelectorAll('.feed-shared-inline-show-more-text__see-more-less-toggle, .see-more, button');
+          seeMoreElements.forEach(el => el.remove());
+
+          let text = (clone.textContent || '').trim();
+          text = text.replace(/\bsee\s+more\b/gi, '').trim();
+          text = text.replace(/\bsee\s+translation\b/gi, '').trim();
+
+          navigator.clipboard.writeText(text).then(() => {
+            copyBtn.classList.add('success');
+            copyBtn.innerHTML = `
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="linkgenie-copy-icon">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span class="artdeco-button__text">Copied!</span>
+            `;
+
+            setTimeout(() => {
+              copyBtn.classList.remove('success');
+              copyBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="linkgenie-copy-icon">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span class="artdeco-button__text">Copy Post</span>
+              `;
+            }, 1500);
+          }).catch((err) => {
+            console.error('LinkGenie: Failed to copy text:', err);
+          });
+        } else {
+          // fallback if no description selector matched: search for any paragraph inside the postcard
+          const paragraphs = postCard.querySelectorAll('p, span');
+          let text = '';
+          for (const p of paragraphs) {
+            const txt = (p.textContent || '').trim();
+            if (txt.length > 50 && !txt.includes('reactions') && !txt.includes('Comment') && !txt.includes('Repost')) {
+              text = txt;
+              break;
+            }
+          }
+          if (text) {
+            navigator.clipboard.writeText(text).then(() => {
+              copyBtn.classList.add('success');
+              copyBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="linkgenie-copy-icon">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span class="artdeco-button__text">Copied!</span>
+              `;
+              setTimeout(() => {
+                copyBtn.classList.remove('success');
+                copyBtn.innerHTML = `
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="linkgenie-copy-icon">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span class="artdeco-button__text">Copy Post</span>
+                `;
+              }, 1500);
+            }).catch((err) => {
+              console.error('LinkGenie: Failed fallback copy:', err);
+            });
+          } else {
+            copyBtn.innerHTML = `
+              <span class="artdeco-button__text">No text found</span>
+            `;
+            setTimeout(() => {
+              copyBtn.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="linkgenie-copy-icon">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span class="artdeco-button__text">Copy Post</span>
+              `;
+            }, 1500);
+          }
+        }
+      });
+
+      // Append to the action bar
+      htmlBar.appendChild(copyBtn);
+      htmlBar.setAttribute('data-lg-copy-bar-injected', 'true');
+      console.log('AI Reply Extension: Injected "Copy Post" button into social action bar.');
     });
   });
 
