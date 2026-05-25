@@ -1,4 +1,4 @@
-"use strict";(()=>{var x=null,h="professional",k="short",L=null,u=null,m=null,g=!1;function T(n,o){n.focus();try{let e=window.getSelection(),t=document.createRange();t.selectNodeContents(n),e?.removeAllRanges(),e?.addRange(t),document.execCommand("insertText",!1,o)||(n.innerText=o),n.dispatchEvent(new Event("input",{bubbles:!0})),n.dispatchEvent(new Event("change",{bubbles:!0})),console.log("AI Reply Extension: Text successfully injected into active composer.")}catch(e){console.error("AI Reply Extension: Error inserting text:",e),n.innerText=o,n.dispatchEvent(new Event("input",{bubbles:!0}))}}function E(){if(u)return u;let n=document.createElement("div");n.id="ai-reply-assistant-root",n.style.position="fixed",n.style.zIndex="999999",document.body.appendChild(n);let o=n.attachShadow({mode:"open"});u=o;let e=document.createElement("style");e.textContent=`
+"use strict";(()=>{var y=null,h="professional",k="short",L=null,m=null,g=null,f=!1;function w(n,o){n.focus();try{let e=window.getSelection(),t=document.createRange();t.selectNodeContents(n),e?.removeAllRanges(),e?.addRange(t),document.execCommand("insertText",!1,o)||(n.innerText=o),n.dispatchEvent(new Event("input",{bubbles:!0})),n.dispatchEvent(new Event("change",{bubbles:!0})),console.log("AI Reply Extension: Text successfully injected into active composer.")}catch(e){console.error("AI Reply Extension: Error inserting text:",e),n.innerText=o,n.dispatchEvent(new Event("input",{bubbles:!0}))}}function E(){if(m)return m;let n=document.createElement("div");n.id="ai-reply-assistant-root",n.style.position="fixed",n.style.zIndex="999999",document.body.appendChild(n);let o=n.attachShadow({mode:"open"});m=o;let e=document.createElement("style");e.textContent=`
     :host {
       font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
@@ -486,9 +486,118 @@
         <button class="btn btn-primary" id="insertBtn" disabled>Insert Reply</button>
       </div>
     </div>
-  `,o.appendChild(t);let r=o.getElementById("closeModal"),a=o.getElementById("cancelBtn"),i=o.getElementById("insertBtn"),l=o.getElementById("generateBtn"),s=o.getElementById("draftTextarea"),d=()=>{t.classList.remove("active")};r.addEventListener("click",d),a.addEventListener("click",d),t.addEventListener("click",b=>{b.target===t&&d()}),document.addEventListener("keydown",b=>{b.key==="Escape"&&t.classList.contains("active")&&d()}),i.addEventListener("click",()=>{x&&s.value.trim()&&(T(x,s.value.trim()),d())});let c=o.querySelectorAll("#toneControl .segmented-option");c.forEach(b=>{b.addEventListener("click",()=>{c.forEach(p=>p.classList.remove("active")),b.classList.add("active"),h=b.getAttribute("data-value")||"professional"})});let v=o.querySelectorAll("#lengthControl .segmented-option");return v.forEach(b=>{b.addEventListener("click",()=>{v.forEach(p=>p.classList.remove("active")),b.classList.add("active"),k=b.getAttribute("data-value")||"short"})}),l.addEventListener("click",()=>{B()}),o}function B(){if(g){console.log("AI Reply Extension: Generation already in progress. Ignoring duplicate trigger.");return}let n=E(),o=n.getElementById("postContentInput"),e=o?o.value.trim():"",t=n.getElementById("errorContainer"),r=n.getElementById("loadingOverlay"),a=n.getElementById("draftTextarea"),i=n.getElementById("insertBtn"),l=n.getElementById("generateBtn");if(!e){t.textContent="Please paste or type some LinkedIn post content first.",t.classList.add("active");return}g=!0,t.classList.remove("active"),r.classList.add("active"),i.disabled=!0,l&&(l.disabled=!0),chrome.runtime.sendMessage({action:"generateReply",postText:e,tone:h,length:k},s=>{if(g=!1,r.classList.remove("active"),l&&(l.disabled=!1),chrome.runtime.lastError){console.error("AI Reply Extension: Message error:",chrome.runtime.lastError),t.textContent=`Extension communication error: ${chrome.runtime.lastError.message}`,t.classList.add("active");return}if(s&&s.success)s.reply==="POST_TEXT_NOT_FOUND"?(a.value="",t.textContent="LinkGenie could not detect a clear post body from the provided text to generate a reply.",t.classList.add("active"),i.disabled=!0):(a.value=s.reply,i.disabled=!1);else{let d=s?.error||"Unknown error occurred while generating reply.";t.textContent=`Error: ${d}`,t.classList.add("active")}})}function w(n,o){x=n,L=o;let e=E(),t=e.getElementById("postContentInput");t&&(t.value="");let r=e.getElementById("draftTextarea");r&&(r.value="");let a=e.getElementById("errorContainer");a&&(a.classList.remove("active"),a.textContent="");let i=e.getElementById("insertBtn");i&&(i.disabled=!0);let l=e.querySelector(".backdrop");document.documentElement.classList.contains("theme--dark")||document.body.classList.contains("theme--dark")||document.documentElement.getAttribute("data-theme")==="dark"?l.classList.add("dark"):l.classList.remove("dark"),l.classList.add("active"),t&&t.focus()}function f(n,o){let e=document.createElement("button");return e.type="button",e.className="ai-reply-trigger",e.innerHTML=`
+  `,o.appendChild(t);let i=o.getElementById("closeModal"),a=o.getElementById("cancelBtn"),r=o.getElementById("insertBtn"),s=o.getElementById("generateBtn"),d=o.getElementById("draftTextarea"),l=()=>{t.classList.remove("active")};i.addEventListener("click",l),a.addEventListener("click",l),t.addEventListener("click",p=>{p.target===t&&l()}),document.addEventListener("keydown",p=>{p.key==="Escape"&&t.classList.contains("active")&&l()}),r.addEventListener("click",()=>{y&&d.value.trim()&&(w(y,d.value.trim()),l())});let b=o.querySelectorAll("#toneControl .segmented-option");b.forEach(p=>{p.addEventListener("click",()=>{b.forEach(u=>u.classList.remove("active")),p.classList.add("active"),h=p.getAttribute("data-value")||"professional"})});let c=o.querySelectorAll("#lengthControl .segmented-option");return c.forEach(p=>{p.addEventListener("click",()=>{c.forEach(u=>u.classList.remove("active")),p.classList.add("active"),k=p.getAttribute("data-value")||"short"})}),s.addEventListener("click",()=>{T()}),o}function T(){if(f){console.log("AI Reply Extension: Generation already in progress. Ignoring duplicate trigger.");return}let n=E(),o=n.getElementById("postContentInput"),e=o?o.value.trim():"",t=n.getElementById("errorContainer"),i=n.getElementById("loadingOverlay"),a=n.getElementById("draftTextarea"),r=n.getElementById("insertBtn"),s=n.getElementById("generateBtn");if(!e){t.textContent="Please paste or type some LinkedIn post content first.",t.classList.add("active");return}f=!0,t.classList.remove("active"),i.classList.add("active"),r.disabled=!0,s&&(s.disabled=!0),chrome.runtime.sendMessage({action:"generateReply",postText:e,tone:h,length:k},d=>{if(f=!1,i.classList.remove("active"),s&&(s.disabled=!1),chrome.runtime.lastError){console.error("AI Reply Extension: Message error:",chrome.runtime.lastError),t.textContent=`Extension communication error: ${chrome.runtime.lastError.message}`,t.classList.add("active");return}if(d&&d.success)d.reply==="POST_TEXT_NOT_FOUND"?(a.value="",t.textContent="LinkGenie could not detect a clear post body from the provided text to generate a reply.",t.classList.add("active"),r.disabled=!0):(a.value=d.reply,r.disabled=!1);else{let l=d?.error||"Unknown error occurred while generating reply.";t.textContent=`Error: ${l}`,t.classList.add("active")}})}function B(n,o){y=n,L=o;let e=E(),t=e.getElementById("postContentInput");t&&(t.value="");let i=e.getElementById("draftTextarea");i&&(i.value="");let a=e.getElementById("errorContainer");a&&(a.classList.remove("active"),a.textContent="");let r=e.getElementById("insertBtn");r&&(r.disabled=!0);let s=e.querySelector(".backdrop");document.documentElement.classList.contains("theme--dark")||document.body.classList.contains("theme--dark")||document.documentElement.getAttribute("data-theme")==="dark"?s.classList.add("dark"):s.classList.remove("dark"),s.classList.add("active"),t&&t.focus()}function x(n,o){let e=document.createElement("button");return e.type="button",e.className="ai-reply-trigger",e.innerHTML=`
     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 6px; vertical-align: middle; display: inline-block;">
       <path d="M9 21c-.5 0-.9-.3-1-.8l-1.5-4.7L1.8 14c-.5-.1-.8-.5-.8-1s.3-.9.8-1l4.7-1.5L8 5.8c.1-.5.5-.8 1-.8s.9.3 1 .8l1.5 4.7 4.7 1.5c.5.1.8.5.8 1s-.3.9-.8 1l-4.7 1.5-1.5 4.7c-.1.5-.5.8-1 .8zM19 8c-.3 0-.5-.2-.6-.4l-.8-2.2-2.2-.8c-.3-.1-.4-.3-.4-.6s.2-.5.4-.6l2.2-.8.8-2.2c.1-.3.3-.4.6-.4s.5.2.6.4l.8 2.2 2.2.8c.3.1.4.3.4.6s-.2.5-.4.6l-2.2.8-.8 2.2c-.1.3-.3.4-.6.4z"/>
     </svg>
     <span>AI Reply</span>
-  `,e.style.display="inline-flex",e.style.alignItems="center",e.style.justifyContent="center",e.style.background="transparent",e.style.border="none",e.style.color="inherit",e.style.opacity="0.75",e.style.borderRadius="16px",e.style.padding="0 12px",e.style.height="32px",e.style.fontSize="14px",e.style.fontWeight="600",e.style.cursor="pointer",e.style.marginLeft="4px",e.style.marginRight="4px",e.style.transition="all 0.16s ease-in-out",e.style.fontFamily='-apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',e.addEventListener("mouseenter",()=>{e.style.background="rgba(128, 128, 128, 0.15)",e.style.opacity="1"}),e.addEventListener("mouseleave",()=>{e.style.background="transparent",e.style.opacity="0.75"}),e.addEventListener("click",t=>{t.preventDefault(),t.stopPropagation(),w(n,o)}),e}function M(n){let o=n.querySelector('button[type="submit"]');if(o)return o;let e=n.querySelectorAll("button");for(let t=0;t<e.length;t++){let r=e[t],a=(r.textContent||"").trim().toLowerCase();if(["post","comment","reply","send","publish","share"].includes(a))return r;let i=(r.getAttribute("aria-label")||"").toLowerCase();if(i.includes("post")||i.includes("comment")||i.includes("reply"))return r}return null}function C(n){let o=n,e=0;for(;o&&e<6;){let t=o.querySelector('button[aria-label*="Emoji"], button[aria-label*="emoji"], button[aria-label*="photo"], button[aria-label*="photo" i], button[aria-label*="image"]');if(t&&t.parentElement)return t.parentElement;o=o.parentElement,e++}return null}function y(){document.querySelectorAll('div[contenteditable="true"], textarea.comments-comment-textbox__textarea').forEach(o=>{let e=o;if(e.getAttribute("data-ai-reply-injected")==="true"||e.closest("#ai-reply-assistant-root")||e.classList.contains("draft-textarea"))return;let t=C(e);if(t){let s=f(e,t);t.insertBefore(s,t.firstChild),e.setAttribute("data-ai-reply-injected","true"),console.log("AI Reply Extension: Injected button into toolbar next to emoji/photo icons.");return}let r=e,a=null,i=0;for(;r&&i<6&&(a=M(r),!a);)r=r.parentElement,i++;let l=r||e;if(a&&a.parentElement){let s=f(e,l);a.parentElement.insertBefore(s,a),e.setAttribute("data-ai-reply-injected","true"),console.log("AI Reply Extension: Injected button next to submit button (class-agnostic).")}else{let s=f(e,l),d=e.parentElement;if(d){let c=document.createElement("div");c.className="ai-reply-adhoc-bar",c.style.display="inline-flex",c.style.justifyContent="flex-end",c.style.width="100%",c.style.padding="4px 0",c.appendChild(s),e.nextSibling?d.insertBefore(c,e.nextSibling):d.appendChild(c),e.setAttribute("data-ai-reply-injected","true"),console.log("AI Reply Extension: Succeeded in fallback button injection after editor.")}}})}function I(){y(),new MutationObserver(()=>{m&&clearTimeout(m),m=window.setTimeout(()=>{y()},150)}).observe(document.body,{childList:!0,subtree:!0}),console.log("AI Reply Extension: MutationObserver initialized.")}I();})();
+  `,e.style.display="inline-flex",e.style.alignItems="center",e.style.justifyContent="center",e.style.background="transparent",e.style.border="none",e.style.color="inherit",e.style.opacity="0.75",e.style.borderRadius="16px",e.style.padding="0 12px",e.style.height="32px",e.style.fontSize="14px",e.style.fontWeight="600",e.style.cursor="pointer",e.style.marginLeft="4px",e.style.marginRight="4px",e.style.transition="all 0.16s ease-in-out",e.style.fontFamily='-apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',e.addEventListener("mouseenter",()=>{e.style.background="rgba(128, 128, 128, 0.15)",e.style.opacity="1"}),e.addEventListener("mouseleave",()=>{e.style.background="transparent",e.style.opacity="0.75"}),e.addEventListener("click",t=>{t.preventDefault(),t.stopPropagation(),B(n,o)}),e}function M(n){let o=n.querySelector('button[type="submit"]');if(o)return o;let e=n.querySelectorAll("button");for(let t=0;t<e.length;t++){let i=e[t],a=(i.textContent||"").trim().toLowerCase();if(["post","comment","reply","send","publish","share"].includes(a))return i;let r=(i.getAttribute("aria-label")||"").toLowerCase();if(r.includes("post")||r.includes("comment")||r.includes("reply"))return i}return null}function C(n){let o=n,e=0;for(;o&&e<6;){let t=o.querySelector('button[aria-label*="Emoji"], button[aria-label*="emoji"], button[aria-label*="photo"], button[aria-label*="photo" i], button[aria-label*="image"]');if(t&&t.parentElement)return t.parentElement;o=o.parentElement,e++}return null}function I(){let n="linkgenie-main-styles";if(document.getElementById(n))return;let o=document.createElement("style");o.id=n,o.textContent=`
+    .feed-shared-inline-show-more-text,
+    .expandable-text-box,
+    .feed-shared-update-v2__description-text,
+    .update-components-text {
+      position: relative !important;
+    }
+
+    .linkgenie-copy-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      color: rgba(0, 0, 0, 0.6);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .theme--dark .linkgenie-copy-btn,
+    [data-theme="dark"] .linkgenie-copy-btn {
+      background: #1d2226;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.6);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    .feed-shared-inline-show-more-text:hover .linkgenie-copy-btn,
+    .expandable-text-box:hover .linkgenie-copy-btn,
+    .feed-shared-update-v2__description-text:hover .linkgenie-copy-btn,
+    .update-components-text:hover .linkgenie-copy-btn {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .linkgenie-copy-btn:hover {
+      background: rgba(10, 102, 194, 0.08);
+      color: #0a66c2;
+      border-color: #0a66c2;
+      transform: scale(1.1);
+    }
+
+    .theme--dark .linkgenie-copy-btn:hover,
+    [data-theme="dark"] .linkgenie-copy-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      border-color: #ffffff;
+    }
+
+    .linkgenie-copy-btn.success {
+      background: #30d158 !important;
+      border-color: #30d158 !important;
+      color: #ffffff !important;
+      opacity: 1 !important;
+      transform: scale(1.1);
+    }
+
+    .linkgenie-copy-btn::after {
+      content: 'Copy Post';
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      background: rgba(0, 0, 0, 0.85);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.15s ease-in-out;
+      font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .linkgenie-copy-btn.success::after {
+      content: 'Copied!';
+    }
+
+    .linkgenie-copy-btn:hover::after,
+    .linkgenie-copy-btn.success::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  `,document.head.appendChild(o)}function v(){I(),[".feed-shared-inline-show-more-text",".expandable-text-box",".feed-shared-update-v2__description-text",".update-components-text"].forEach(e=>{document.querySelectorAll(e).forEach(i=>{let a=i;if(a.closest(".comments-comment-item")||a.closest(".comment-item")||(a.className||"").toLowerCase().includes("comment")||a.getAttribute("data-lg-copy-injected")==="true")return;let r=document.createElement("button");r.type="button",r.className="linkgenie-copy-btn",r.setAttribute("aria-label","Copy post content"),r.innerHTML=`
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+      `,r.addEventListener("click",s=>{s.preventDefault(),s.stopPropagation();let d=a.cloneNode(!0),l=d.querySelector(".linkgenie-copy-btn");l&&l.remove();let b=(d.textContent||"").trim();b=b.replace(/\bsee\s+more\b/gi,"").trim(),navigator.clipboard.writeText(b).then(()=>{r.classList.add("success"),r.innerHTML=`
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          `,setTimeout(()=>{r.classList.remove("success"),r.innerHTML=`
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            `},1500)}).catch(c=>{console.error("LinkGenie: Failed to copy text:",c)})}),a.appendChild(r),a.setAttribute("data-lg-copy-injected","true"),console.log("AI Reply Extension: Injected copy button overlay into description element.")})}),document.querySelectorAll('div[contenteditable="true"], textarea.comments-comment-textbox__textarea').forEach(e=>{let t=e;if(t.getAttribute("data-ai-reply-injected")==="true"||t.closest("#ai-reply-assistant-root")||t.classList.contains("draft-textarea"))return;let i=C(t);if(i){let l=x(t,i);i.insertBefore(l,i.firstChild),t.setAttribute("data-ai-reply-injected","true"),console.log("AI Reply Extension: Injected button into toolbar next to emoji/photo icons.");return}let a=t,r=null,s=0;for(;a&&s<6&&(r=M(a),!r);)a=a.parentElement,s++;let d=a||t;if(r&&r.parentElement){let l=x(t,d);r.parentElement.insertBefore(l,r),t.setAttribute("data-ai-reply-injected","true"),console.log("AI Reply Extension: Injected button next to submit button (class-agnostic).")}else{let l=x(t,d),b=t.parentElement;if(b){let c=document.createElement("div");c.className="ai-reply-adhoc-bar",c.style.display="inline-flex",c.style.justifyContent="flex-end",c.style.width="100%",c.style.padding="4px 0",c.appendChild(l),t.nextSibling?b.insertBefore(c,t.nextSibling):b.appendChild(c),t.setAttribute("data-ai-reply-injected","true"),console.log("AI Reply Extension: Succeeded in fallback button injection after editor.")}}})}function H(){v(),new MutationObserver(()=>{g&&clearTimeout(g),g=window.setTimeout(()=>{v()},150)}).observe(document.body,{childList:!0,subtree:!0}),console.log("AI Reply Extension: MutationObserver initialized.")}H();})();

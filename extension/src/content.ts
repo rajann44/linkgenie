@@ -870,10 +870,201 @@ function findToolbar(editor: HTMLElement): HTMLElement | null {
 }
 
 /**
- * Scans page for comment boxes and injects the "AI Reply" button.
+ * Injects stylesheet rules into the main page's head for the floating Copy button overlays.
+ */
+function injectMainPageStyles() {
+  const styleId = 'linkgenie-main-styles';
+  if (document.getElementById(styleId)) return;
+
+  const style = document.createElement('style');
+  style.id = styleId;
+  style.textContent = `
+    .feed-shared-inline-show-more-text,
+    .expandable-text-box,
+    .feed-shared-update-v2__description-text,
+    .update-components-text {
+      position: relative !important;
+    }
+
+    .linkgenie-copy-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      color: rgba(0, 0, 0, 0.6);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .theme--dark .linkgenie-copy-btn,
+    [data-theme="dark"] .linkgenie-copy-btn {
+      background: #1d2226;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.6);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    .feed-shared-inline-show-more-text:hover .linkgenie-copy-btn,
+    .expandable-text-box:hover .linkgenie-copy-btn,
+    .feed-shared-update-v2__description-text:hover .linkgenie-copy-btn,
+    .update-components-text:hover .linkgenie-copy-btn {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .linkgenie-copy-btn:hover {
+      background: rgba(10, 102, 194, 0.08);
+      color: #0a66c2;
+      border-color: #0a66c2;
+      transform: scale(1.1);
+    }
+
+    .theme--dark .linkgenie-copy-btn:hover,
+    [data-theme="dark"] .linkgenie-copy-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      border-color: #ffffff;
+    }
+
+    .linkgenie-copy-btn.success {
+      background: #30d158 !important;
+      border-color: #30d158 !important;
+      color: #ffffff !important;
+      opacity: 1 !important;
+      transform: scale(1.1);
+    }
+
+    .linkgenie-copy-btn::after {
+      content: 'Copy Post';
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      background: rgba(0, 0, 0, 0.85);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.15s ease-in-out;
+      font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .linkgenie-copy-btn.success::after {
+      content: 'Copied!';
+    }
+
+    .linkgenie-copy-btn:hover::after,
+    .linkgenie-copy-btn.success::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+/**
+ * Scans page for comment boxes and injects the "AI Reply" button,
+ * and also injects "Copy Post" overlay buttons into descriptions.
  */
 function scanAndInject() {
-  // Query all contenteditable fields or textareas on the page
+  // Inject main page styles if not already present
+  injectMainPageStyles();
+
+  // 1. Inject Clipboard Copy buttons into post descriptions
+  const descriptionSelectors = [
+    '.feed-shared-inline-show-more-text',
+    '.expandable-text-box',
+    '.feed-shared-update-v2__description-text',
+    '.update-components-text'
+  ];
+
+  descriptionSelectors.forEach((selector) => {
+    const elements = document.querySelectorAll(selector);
+    elements.forEach((el) => {
+      const htmlEl = el as HTMLElement;
+
+      // Skip elements that reside inside comments
+      if (
+        htmlEl.closest('.comments-comment-item') ||
+        htmlEl.closest('.comment-item') ||
+        (htmlEl.className || '').toLowerCase().includes('comment')
+      ) {
+        return;
+      }
+
+      // Check if we've already injected for this description
+      if (htmlEl.getAttribute('data-lg-copy-injected') === 'true') {
+        return;
+      }
+
+      const copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'linkgenie-copy-btn';
+      copyBtn.setAttribute('aria-label', 'Copy post content');
+      copyBtn.innerHTML = `
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+      `;
+
+      copyBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Resolve clean post text by cloning and removing the copy button element
+        const clone = htmlEl.cloneNode(true) as HTMLElement;
+        const btnToRemove = clone.querySelector('.linkgenie-copy-btn');
+        if (btnToRemove) {
+          btnToRemove.remove();
+        }
+        let text = (clone.textContent || '').trim();
+        text = text.replace(/\bsee\s+more\b/gi, '').trim();
+
+        navigator.clipboard.writeText(text).then(() => {
+          copyBtn.classList.add('success');
+          copyBtn.innerHTML = `
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          `;
+
+          setTimeout(() => {
+            copyBtn.classList.remove('success');
+            copyBtn.innerHTML = `
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            `;
+          }, 1500);
+        }).catch((err) => {
+          console.error('LinkGenie: Failed to copy text:', err);
+        });
+      });
+
+      htmlEl.appendChild(copyBtn);
+      htmlEl.setAttribute('data-lg-copy-injected', 'true');
+      console.log('AI Reply Extension: Injected copy button overlay into description element.');
+    });
+  });
+
+  // 2. Inject AI Reply buttons next to editors
   const editors = document.querySelectorAll('div[contenteditable="true"], textarea.comments-comment-textbox__textarea');
 
   editors.forEach((editor) => {
