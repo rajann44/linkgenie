@@ -869,10 +869,120 @@ function findToolbar(editor: HTMLElement): HTMLElement | null {
   return null;
 }
 
+const COPY_ICON_SVG = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+  </svg>
+`;
+
+const CHECK_ICON_SVG = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#05b03d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+    <polyline points="20 6 9 17 4 12"></polyline>
+  </svg>
+`;
+
+/**
+ * Locate all posts on page and inject a copy button next to their menu buttons.
+ */
+function injectCopyButtons() {
+  const paragraphs = document.querySelectorAll('p[componentkey^="feed-commentary"]');
+
+  paragraphs.forEach(paragraph => {
+    const pElement = paragraph as HTMLElement;
+    
+    // Climb up to find the common post root container card
+    const postRoot = pElement.closest('article') || 
+                     pElement.closest('[data-urn]') || 
+                     pElement.closest('.feed-shared-update-v2') || 
+                     pElement.parentElement?.closest('div');
+    
+    if (!postRoot) return;
+
+    // Avoid duplicate injections
+    if (postRoot.getAttribute('data-copy-injected') === 'true') {
+      return;
+    }
+
+    // Locate the control menu ("...") button inside this post root
+    const controlBtn = postRoot.querySelector('button[aria-label^="Open control menu"]') as HTMLButtonElement | null;
+    if (!controlBtn) return;
+
+    // Identify the header row container of the control button
+    const headerRow = controlBtn.parentElement;
+    if (!headerRow) return;
+
+    // Mark post card as injected
+    postRoot.setAttribute('data-copy-injected', 'true');
+
+    // Create the Copy Button
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'linkedin-post-copy-button';
+    copyBtn.type = 'button';
+    copyBtn.title = 'Copy post text';
+    copyBtn.innerHTML = COPY_ICON_SVG;
+
+    // Match LinkedIn's native button style rules (subtle, rounded, small)
+    copyBtn.style.cssText = `
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      margin-right: 4px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(0, 0, 0, 0.6);
+      transition: background-color 0.15s, color 0.15s;
+      vertical-align: middle;
+      outline: none;
+    `;
+
+    // Add interactive hover states
+    copyBtn.addEventListener('mouseenter', () => {
+      copyBtn.style.backgroundColor = 'rgba(0, 0, 0, 0.06)';
+      copyBtn.style.color = 'rgba(0, 0, 0, 0.9)';
+    });
+
+    copyBtn.addEventListener('mouseleave', () => {
+      copyBtn.style.backgroundColor = 'transparent';
+      copyBtn.style.color = 'rgba(0, 0, 0, 0.6)';
+    });
+
+    // Handle copying and visual checkmark state on click
+    copyBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      const textToCopy = pElement.innerText || '';
+      if (!textToCopy) return;
+
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+
+        // Success state visual indicator
+        copyBtn.innerHTML = CHECK_ICON_SVG;
+        
+        setTimeout(() => {
+          copyBtn.innerHTML = COPY_ICON_SVG;
+        }, 1500);
+      } catch (err) {
+        console.error('Failed to copy post text contents:', err);
+      }
+    });
+
+    // Append the button right next to the control menu button
+    headerRow.insertBefore(copyBtn, controlBtn);
+  });
+}
+
 /**
  * Scans page for comment boxes and injects the "AI Reply" button.
  */
 function scanAndInject() {
+  // Inject post copy buttons into headers
+  injectCopyButtons();
   // Query all contenteditable fields or textareas on the page
   const editors = document.querySelectorAll('div[contenteditable="true"], textarea.comments-comment-textbox__textarea');
 

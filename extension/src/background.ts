@@ -60,6 +60,55 @@ Strict rules:
 - Output ONLY the final comment text and nothing else.`;
 }
 
+// Helper to fetch with automatic retry on 429 Rate Limit errors
+async function fetchWithRetry(url: string, options: RequestInit, maxAttempts = 3): Promise<Response> {
+  let attempts = 0;
+  while (attempts < maxAttempts) {
+    attempts++;
+    const response = await fetch(url, options);
+    
+    if (response.ok) {
+      return response;
+    }
+    
+    // Check for 429 Too Many Requests
+    if (response.status === 429 && attempts < maxAttempts) {
+      let waitMs = 5000; // Default fallback delay
+      
+      // 1. Try reading standard "Retry-After" header (in seconds)
+      const retryAfterHeader = response.headers.get('Retry-After');
+      if (retryAfterHeader) {
+        const seconds = parseInt(retryAfterHeader, 10);
+        if (!isNaN(seconds)) {
+          waitMs = (seconds * 1000) + 500;
+        }
+      } else {
+        // 2. Otherwise try parsing Google/Gemini specific message from body
+        try {
+          const clone = response.clone();
+          const errData = await clone.json().catch(() => ({}));
+          const errMsg = errData.error?.message || '';
+          
+          // Matches "Please retry in 5.197919471s." or similar
+          const match = errMsg.match(/retry in ([\d.]+)s/i);
+          if (match) {
+            waitMs = Math.ceil(parseFloat(match[1]) * 1000) + 500;
+          }
+        } catch (e) {
+          // Fallback to default waitMs
+        }
+      }
+      
+      console.warn('LinkGenie: Hit rate limit (429). Retrying in ' + waitMs + 'ms (attempt ' + attempts + '/' + maxAttempts + ')...');
+      await new Promise(resolve => setTimeout(resolve, waitMs));
+      continue;
+    }
+    
+    return response;
+  }
+  return fetch(url, options); // Final fallback (will naturally fail and pass back response)
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'generateReply') {
     const { postText, tone, length } = message;
@@ -86,11 +135,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
 
       const systemInstruction = buildSystemInstruction(tone || 'professional', length || 'short', persona);
-      const prompt = `EXTRACTED_POST_TEXT:
-${cleanPostText.substring(0, 3000)}`;
+      const prompt = 'EXTRACTED_POST_TEXT:\n' + cleanPostText.substring(0, 3000);
 
       try {
-        console.log(`LinkGenie: Generating reply using provider "${provider}"...`);
+        console.log('LinkGenie: Generating reply using provider "' + provider + '"...');
         let reply = '';
         if (provider === 'gemini') {
           let modelName = model ? model.trim() : 'gemini-2.5-flash';
@@ -111,9 +159,9 @@ ${cleanPostText.substring(0, 3000)}`;
           }
 
           // Use standard Google Generative Language API
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+          const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent?key=' + apiKey;
           
-          const response = await fetch(url, {
+          const response = await fetchWithRetry(url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -131,7 +179,7 @@ ${cleanPostText.substring(0, 3000)}`;
           if (!response.ok) {
             const errData = await response.json().catch(() => ({}));
             const errMsg = errData.error?.message || response.statusText;
-            throw new Error(`Google API error (${response.status}): ${errMsg}`);
+            throw new Error('Google API error (' + response.status + '): ' + errMsg);
           }
 
           const data = await response.json();
@@ -145,7 +193,7 @@ ${cleanPostText.substring(0, 3000)}`;
           const modelName = model || 'gpt-4o-mini';
           const url = 'https://api.openai.com/v1/chat/completions';
 
-          const response = await fetch(url, {
+          const response = await fetchWithRetry(url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -179,7 +227,7 @@ ${cleanPostText.substring(0, 3000)}`;
           const modelName = model || 'claude-3-haiku-20240307';
           const url = 'https://api.anthropic.com/v1/messages';
 
-          const response = await fetch(url, {
+          const response = await fetchWithRetry(url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
